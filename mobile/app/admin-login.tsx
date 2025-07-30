@@ -1,18 +1,24 @@
-import { MaterialIcons } from '@expo/vector-icons';
+import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Text, View } from 'react-native';
+import Toast from 'react-native-toast-message';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Card from '@/components/ui/Card';
+import Header from '@/components/ui/Header';
 
-export default function AdminLogin() {
+export default function AdminLoginScreen() {
+    const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const router = useRouter();
 
     const isValidEmail = (email: string) => /.+@.+\..+/.test(email);
 
-    const handleLogin = () => {
+    const handleLogin = async () => {
         setError('');
         if (!email || !password) {
             setError('Please enter email and password');
@@ -23,53 +29,76 @@ export default function AdminLogin() {
             return;
         }
         setLoading(true);
-        setTimeout(() => {
+        try {
+            await login({ email, password });
+        } catch (error) {
+            setError('Login failed. Please try again.');
+        } finally {
             setLoading(false);
-            // Simulate successful admin login
-            router.replace('/admin-dashboard');
-        }, 1000);
+        }
     };
 
     return (
-        <View className="flex-1 justify-center items-center bg-gray-50 px-4">
-            <View className="bg-white rounded-xl shadow p-6 w-full max-w-md">
-                <Text className="text-2xl font-bold text-green-700 text-center mb-1">Admin Portal</Text>
-                <Text className="text-gray-500 text-center mb-4">Access the AgriFinance administration dashboard</Text>
-                {/* Email */}
-                <Text className="text-xs font-semibold text-gray-700 mb-1">Email</Text>
-                <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-blue-50 mb-3">
-                    <MaterialIcons name="mail" size={18} color="#2563eb" />
-                    <TextInput
-                        className="flex-1 text-base ml-2"
-                        placeholder="Email"
+        <View className="flex-1 bg-gray-50">
+            <Toast/>
+            
+            <Header
+                title="Admin Login"
+                subtitle="Access admin dashboard"
+                onBack={() => router.back()}
+            />
+
+            <View className="flex-1 px-8">
+                <Card title="Admin Access">
+                    <Input
+                        label="Email Address"
+                        placeholder="Enter admin email"
                         value={email}
                         onChangeText={setEmail}
+                        icon="mail"
                         keyboardType="email-address"
                         autoCapitalize="none"
-                        placeholderTextColor="#9CA3AF"
+                        required
                     />
-                </View>
-                {/* Password */}
-                <Text className="text-xs font-semibold text-gray-700 mb-1">Password</Text>
-                <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-blue-50 mb-3">
-                    <MaterialIcons name="lock" size={18} color="#2563eb" />
-                    <TextInput
-                        className="flex-1 text-base ml-2"
-                        placeholder="Password"
+
+                    <Input
+                        label="Password"
+                        placeholder="Enter admin password"
                         value={password}
-                        onChangeText={t => { setPassword(t); if (error) setError(''); }}
+                        onChangeText={setPassword}
+                        icon="lock"
                         secureTextEntry
                         autoCapitalize="none"
-                        placeholderTextColor="#9CA3AF"
+                        required
                     />
+
+                    {error ? (
+                        <View className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+                            <Text className="text-red-600 text-base">{error}</Text>
+                        </View>
+                    ) : null}
+
+                    <Button
+                        title="Admin Sign In"
+                        onPress={handleLogin}
+                        loading={loading}
+                        size="large"
+                        className="mb-6"
+                    />
+                </Card>
+
+                {/* Back to User Login */}
+                <View className="text-center mb-8">
+                    <Text className="text-gray-500 text-center text-base">
+                        Not an admin?{' '}
+                        <Text 
+                            className="text-green-700 font-semibold"
+                            onPress={() => router.back()}
+                        >
+                            User Login
+                        </Text>
+                    </Text>
                 </View>
-                {error ? <Text className="text-red-500 text-xs mb-2 text-center">{error}</Text> : null}
-                <TouchableOpacity className="w-full bg-green-700 rounded-full py-3 mb-3" onPress={handleLogin} disabled={loading}>
-                    <Text className="text-white text-center font-semibold text-base">Login as Administrator</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => router.replace('/')}>
-                    <Text className="text-blue-700 text-center text-sm font-semibold">Return to User Login</Text>
-                </TouchableOpacity>
             </View>
         </View>
     );

@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { authService } from '@/api/auth';
-import Toast from 'react-native-toast-message';
 import { LoginRequest, SignupRequest } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import Toast from 'react-native-toast-message';
 
 
 export function useAuth() {
@@ -32,8 +32,14 @@ export function useAuth() {
     const signup = async (data: SignupRequest) => {
         setLoading(true);
         try {
-            await authService.signup(data);
-            Toast.show({ type: 'success', text1: 'Signup successful' });
+            const response = await authService.signup(data);
+            if(response.success) {
+                await AsyncStorage.setItem('auth_token', response.data.token);
+                Toast.show({ type: 'success', text1: 'Account created successfully' });
+                router.push('/(tabs)');
+            } else {
+                Toast.show({ type: 'error', text1: 'Signup failed', text2: response.message });
+            }
         } catch (error) {
             Toast.show({ type: 'error', text1: 'Signup failed', text2: error?.message || 'Unknown error' });
         } finally {

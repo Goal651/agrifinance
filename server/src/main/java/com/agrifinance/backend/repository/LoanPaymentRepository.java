@@ -1,6 +1,6 @@
 package com.agrifinance.backend.repository;
 
-import com.agrifinance.backend.model.LoanPayment;
+import com.agrifinance.backend.model.loan.LoanPayment;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

@@ -1,12 +1,14 @@
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+import Input from '@/components/ui/Input';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { EnvelopeIcon, EyeIcon, LockClosedIcon } from 'react-native-heroicons/outline';
+import { Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 export default function LoginScreen() {
-    const { login } = useAuth()
+    const { login } = useAuth();
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -26,85 +28,97 @@ export default function LoginScreen() {
             setError('Please enter a valid email address');
             return;
         }
-        await login({ email, password })
         setLoading(true);
-        setLoading(false)
-
+        try {
+            await login({ email, password });
+        } catch (error) {
+            setError('Login failed. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <View className="flex-1 justify-center items-center bg-gray-50 px-6">
+        <View className="flex-1 bg-gray-50 px-8 py-10">
             <Toast/>
-            {/* Logo */}
-            <View className="mb-6">
+            
+            {/* Header */}
+            <View className="flex-1 justify-center">
+                {/* Logo */}
+                <View className="mb-12 text-center">
+                    <Text className="text-4xl font-bold text-green-700 text-center mb-3">AgriFinance</Text>
+                    <Text className="text-gray-500 text-center text-lg">Agricultural Loans & Project Management</Text>
+                </View>
 
-
-                <Text className="text-3xl font-bold text-green-700 text-center">AgriFinance</Text>
-                <Text className="text-gray-500 text-center mt-1">Agricultural Loans & Project Management</Text>
-            </View>
-
-            {/* Email Input */}
-            <View className="w-full mb-4">
-                <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-1 bg-white">
-                    <EnvelopeIcon size={20} color="#9CA3AF" className="mr-2" />
-                    <TextInput
-                        className="flex-1 text-base"
-                        placeholder="Email"
+                {/* Login Form */}
+                <Card title="Welcome Back">
+                    <Input
+                        label="Email Address"
+                        placeholder="Enter your email"
                         value={email}
                         onChangeText={setEmail}
+                        icon="mail"
                         keyboardType="email-address"
                         autoCapitalize="none"
-                        placeholderTextColor="#9CA3AF"
+                        required
                     />
-                </View>
-            </View>
 
-            {/* Password Input */}
-            <View className="w-full mb-4">
-                <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-1 bg-white">
-                    <LockClosedIcon size={20} color="#9CA3AF" className="mr-2" />
-                    <TextInput
-                        className="flex-1 text-base"
-                        placeholder="Password"
+                    <Input
+                        label="Password"
+                        placeholder="Enter your password"
                         value={password}
                         onChangeText={setPassword}
+                        icon="lock"
                         secureTextEntry={!showPassword}
                         autoCapitalize="none"
-                        placeholderTextColor="#9CA3AF"
+                        required
                     />
-                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                        <EyeIcon size={20} color="#9CA3AF" />
-                    </TouchableOpacity>
+
+                    {error ? (
+                        <View className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+                            <Text className="text-red-600 text-base">{error}</Text>
+                        </View>
+                    ) : null}
+
+                    <Button
+                        title="Sign In"
+                        onPress={handleLogin}
+                        loading={loading}
+                        size="large"
+                        className="mb-6"
+                    />
+
+                    {/* Forgot Password */}
+                    <View className="text-center mb-8">
+                        <Text className="text-green-700 text-center text-base font-semibold">
+                            Forgot Password?
+                        </Text>
+                    </View>
+                </Card>
+
+                {/* Sign Up Link */}
+                <View className="text-center mb-8">
+                    <Text className="text-gray-500 text-center text-base">
+                        Don't have an account?{' '}
+                        <Text 
+                            className="text-green-700 font-semibold"
+                            onPress={() => router.push('/signup')}
+                        >
+                            Sign Up
+                        </Text>
+                    </Text>
+                </View>
+
+                {/* Admin Login */}
+                <View className="text-center">
+                    <Text 
+                        className="text-blue-700 text-center text-base font-semibold"
+                        onPress={() => router.push('/admin-login')}
+                    >
+                        Login as Admin
+                    </Text>
                 </View>
             </View>
-            {error ? <Text className="text-red-500 text-xs mb-2 text-center">{error}</Text> : null}
-            {/* Login Button */}
-            <TouchableOpacity
-                className={`w-full bg-green-700 rounded-2xl py-3 mb-3 ${loading ? 'opacity-60' : ''}`}
-                onPress={handleLogin}
-                disabled={loading}
-            >
-                {loading ? (
-                    <ActivityIndicator color="#fff" />
-                ) : (
-                    <Text className="text-white text-center font-semibold text-base">Login</Text>
-                )}
-            </TouchableOpacity>
-
-
-            {/* Forgot Password */}
-            <TouchableOpacity className="mb-6" onPress={() => { }}>
-                <Text className="text-green-700 text-center text-sm">Forgot Password?</Text>
-            </TouchableOpacity>
-
-            {/* Sign Up Link */}
-            <Text className="text-gray-500 text-center text-sm">
-                Don&apos;t have an account?{' '}
-                <Text className="text-green-700 font-semibold">Sign Up</Text>
-            </Text>
-            <TouchableOpacity className="mt-20" onPress={() => router.push('/admin-login')}>
-                <Text className="text-blue-700 text-center text-sm font-semibold">Login as Admin</Text>
-            </TouchableOpacity>
         </View>
     );
 }

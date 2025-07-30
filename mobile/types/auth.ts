@@ -32,7 +32,8 @@ export interface LoginRequest {
 }
 
 export interface SignupRequest {
-    name: string
+    firstName: string
+    lastName: string
     email: string
     password: string
 }

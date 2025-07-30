@@ -1,48 +1,58 @@
 export interface Project {
-    id: string
-    userId: string
-    name: string
-    description: string
-    status: string
-    type: string
-    createdAt: Date
-    updatedAt: Date
-    goals: [{
+  id: string;
+  name: string;
+  description: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  goals: Goal[];
+}
 
-        id: string
-        name: string
-        description: string
-        status: string
-        priority: string
-    }]
+export interface Goal {
+  id: string;
+  name: string;
+  status: 'active' | 'done';
+  progress: number;
+  activities: Activity[];
+}
+
+export interface Activity {
+  id: string;
+  name: string;
+  completed: boolean;
 }
 
 export interface ProjectCreateRequest {
   name: string;
   description: string;
-  type?: string;
-  goals?: {
+  status: string;
+  goals: {
     name: string;
-    description?: string;
-    status?: string;
-    priority?: string;
+    status: 'active' | 'done';
+    progress: number;
+    activities: {
+      name: string;
+      completed: boolean;
+    }[];
   }[];
-  // Add more fields as needed
 }
 
 export interface ProjectUpdateRequest {
+  id: string;
   name?: string;
   description?: string;
-  type?: string;
   status?: string;
   goals?: {
-    id?: string;
+    id: string;
     name?: string;
-    description?: string;
-    status?: string;
-    priority?: string;
+    status?: 'active' | 'done';
+    progress?: number;
+    activities?: {
+      id: string;
+      name?: string;
+      completed?: boolean;
+    }[];
   }[];
-  // Add more fields as needed
 }
 
 export interface ProjectAnalytics {

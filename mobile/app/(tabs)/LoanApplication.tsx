@@ -1,18 +1,31 @@
 import { getLoanProducts } from '@/api/loan';
+import DocumentUploadField from '@/components/DocumentUploadField';
+import LoanCard from '@/components/LoanCard';
+import LoanInputField from '@/components/LoanInputField';
+import LoanNavigationButtons from '@/components/LoanNavigationButtons';
+import LoanStepHeader from '@/components/LoanStepHeader';
 import { useLoan } from '@/hooks/useLoan';
 import { DocumentUpload, FinancialInfo, LoanProduct, LoanRequest, PersonalInfo } from '@/types';
 import { calculateMonthlyPayment } from '@/utils/loan';
-import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import {
+  PhotoIcon,
+  PlusIcon,
+  XMarkIcon
+} from 'react-native-heroicons/outline';
 import Toast from 'react-native-toast-message';
 
-export default function LoanApplication({ navigation }) {
+export default function LoanApplication() {
+  // ===== HOOKS & ROUTING =====
   const params = useLocalSearchParams();
   const router = useRouter();
   const { applyLoan, loading } = useLoan();
+
+  // ===== STATE MANAGEMENT =====
+  const [step, setStep] = useState(1);
 
   // Fetch loan products from server
   const [loanProducts, setLoanProducts] = useState<LoanProduct[]>([]);
@@ -20,20 +33,29 @@ export default function LoanApplication({ navigation }) {
     getLoanProducts().then(setLoanProducts);
   }, []);
 
+  // Parse product data from navigation params
   const product = params.product ? JSON.parse(params.product as string) : null;
 
-  const [step, setStep] = useState(1);
-  
-  // Step 1: Basic Loan Information
-  const [loanType, setLoanType] = useState(product?.name || '');
-  const [amount, setAmount] = useState(product?.minAmount?.toString() || '');
+  // ===== STEP 1: LOAN INFORMATION (Read-only from product) =====
+  const [loanType] = useState(product?.name || '');
+  const [amount] = useState(product?.minAmount?.toString() || '');
   const [purpose, setPurpose] = useState('');
   const [purposeError, setPurposeError] = useState('');
-  const [term, setTerm] = useState(product?.termMonths?.toString() || '');
-  const [interestRate, setInterestRate] = useState(product?.interest?.toString() || '');
-  const [monthlyPayment, setMonthlyPayment] = useState('');
+  const [term] = useState(product?.termMonths?.toString() || '');
+  const [interestRate] = useState(product?.interest?.toString() || '');
+  const [monthlyPayment] = useState(() => {
+    if (product) {
+      const amt = Number(product.minAmount);
+      const rate = Number(product.interest);
+      const termValue = Number(product.termMonths);
+      if (amt && rate && termValue) {
+        return calculateMonthlyPayment(amt, rate, termValue).toFixed(2);
+      }
+    }
+    return '';
+  });
 
-  // Step 2: Personal Information
+  // ===== STEP 2: PERSONAL INFORMATION =====
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     firstName: '',
     lastName: '',
@@ -46,7 +68,7 @@ export default function LoanApplication({ navigation }) {
     country: ''
   });
 
-  // Step 3: Financial Information
+  // ===== STEP 3: FINANCIAL INFORMATION =====
   const [financialInfo, setFinancialInfo] = useState<FinancialInfo>({
     monthlyIncome: 0,
     annualIncome: 0,
@@ -60,7 +82,7 @@ export default function LoanApplication({ navigation }) {
     accountHolderName: ''
   });
 
-  // Step 4: Document Upload
+  // ===== STEP 4: DOCUMENT UPLOAD =====
   const [documents, setDocuments] = useState<DocumentUpload>({
     idPhoto: null,
     proofOfIncome: null,
@@ -69,9 +91,12 @@ export default function LoanApplication({ navigation }) {
     treeImages: []
   });
 
+  // ===== UTILITY DATA =====
   const farmInfo = { size: '503', location: 'Kigali', existingLoans: 'No' };
 
-  // Loan purpose options based on loan type
+  // ===== UTILITY FUNCTIONS =====
+  
+  // Get loan purpose options based on loan type
   const getPurposeOptions = (loanType: string) => {
     switch (loanType.toLowerCase()) {
       case 'agricultural':
@@ -85,33 +110,7 @@ export default function LoanApplication({ navigation }) {
     }
   };
 
-  useEffect(() => {
-    if (product) {
-      setLoanType(product.name);
-      setAmount(product.minAmount?.toString() || '');
-      setInterestRate(product.interest?.toString() || '');
-      setTerm(product.termMonths?.toString() || '');
-      const amt = Number(product.minAmount);
-      const rate = Number(product.interest);
-      const termValue = Number(product.termMonths);
-      if (amt && rate && termValue) {
-        const monthly = calculateMonthlyPayment(amt, rate, termValue);
-        setMonthlyPayment(monthly.toFixed(2));
-      }
-    }
-  }, [product]);
-
-  useEffect(() => {
-    const amt = Number(amount);
-    const rate = Number(interestRate);
-    const termValue = Number(term);
-    if (amt && rate && termValue) {
-      const monthly = calculateMonthlyPayment(amt, rate, termValue);
-      setMonthlyPayment(monthly.toFixed(2));
-    } else {
-      setMonthlyPayment('');
-    }
-  }, [amount, interestRate, term]);
+  // ===== VALIDATION FUNCTIONS =====
 
   const validateStep1 = () => {
     if (!purpose) {
@@ -145,6 +144,8 @@ export default function LoanApplication({ navigation }) {
     }
     return true;
   };
+
+  // ===== IMAGE HANDLING FUNCTIONS =====
 
   const pickImage = async (type: keyof DocumentUpload) => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -180,6 +181,8 @@ export default function LoanApplication({ navigation }) {
     }));
   };
 
+  // ===== SUBMISSION FUNCTION =====
+
   const handleSubmit = async () => {
     if (!amount || !purpose || !term || !interestRate) return;
     
@@ -187,9 +190,9 @@ export default function LoanApplication({ navigation }) {
       amount: Number(amount),
       type: loanType,
       interest: Number(interestRate),
-      term: term,
+      term: Number(term),
       purpose,
-      termType: loanType,
+      termType: Number(term) >= 12 ? 'years' : 'months',
       personalInfo,
       financialInfo,
       documents
@@ -198,680 +201,575 @@ export default function LoanApplication({ navigation }) {
     await applyLoan(loanRequest);
   };
 
+  // ===== RENDER FUNCTIONS =====
+
   // Step 1: Basic Loan Information
   const renderStep1 = () => (
-    <View>
-      <View className='flex flex-row items-center py-6'>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text><MaterialIcons name='arrow-back' size={18} color="#9CA3AF" /></Text>
-        </TouchableOpacity>
-        <Text className="text-lg font-bold text-green-700 text-center mb-2 flex-1">Loan Application</Text>
-      </View>
-      <View className="w-full h-2 bg-gray-200 rounded-full mb-6">
-        <View className="h-2 bg-green-700 rounded-full" style={{ width: '17%' }} />
-      </View>
-      <Text className="text-center text-xs text-gray-400 mb-2">Step 1 of 6</Text>
-      <Text className="text-green-700 font-bold mb-1">Step 1: Basic Information</Text>
-      <Text className="text-gray-500 mb-6">Tell us about your loan request</Text>
+    <ScrollView className="flex-1 bg-gray-50 px-8" showsVerticalScrollIndicator={false}>
+      <LoanStepHeader
+        step={1}
+        totalSteps={6}
+        title="Basic Information"
+        subtitle="Review loan details and provide purpose"
+        onBack={() => router.back()}
+      />
 
-      <Text className="font-semibold mb-1">Loan Type</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="account-balance-wallet" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
-          placeholder="Select loan type"
+      {/* Loan Details Card */}
+      <LoanCard title="Loan Product Details">
+        <LoanInputField
+          label="Loan Type"
+          placeholder=""
           value={loanType}
-          onChangeText={setLoanType}
+          onChangeText={() => {}}
+          icon="account-balance-wallet"
+          readOnly={true}
         />
-      </View>
-
-      <Text className="font-semibold mb-1">Loan Amount ($)</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="attach-money" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
-          placeholder="Enter loan amount"
-          value={amount}
-          onChangeText={setAmount}
-          keyboardType="numeric"
+        <LoanInputField
+          label="Loan Amount"
+          placeholder=""
+          value={`$${Number(amount).toLocaleString()}`}
+          onChangeText={() => {}}
+          icon="attach-money"
+          readOnly={true}
         />
-      </View>
+        <LoanInputField
+          label="Interest Rate"
+          placeholder=""
+          value={`${interestRate}%`}
+          onChangeText={() => {}}
+          icon="percent"
+          readOnly={true}
+        />
+        <LoanInputField
+          label="Loan Term"
+          placeholder=""
+          value={Number(term) >= 12 ? `${Math.round(Number(term) / 12)} years` : `${term} months`}
+          onChangeText={() => {}}
+          icon="schedule"
+          readOnly={true}
+        />
+        <LoanInputField
+          label="Monthly Payment"
+          placeholder=""
+          value={`$${Number(monthlyPayment).toLocaleString()}`}
+          onChangeText={() => {}}
+          icon="payment"
+          readOnly={true}
+        />
+      </LoanCard>
 
-      <Text className="font-semibold mb-1">Purpose of Loan</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="description" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
-          placeholder="Describe the purpose of your loan"
+      {/* Purpose Section */}
+      <LoanCard title="Loan Purpose">
+        <LoanInputField
+          label="Purpose of Loan"
+          placeholder="Describe the purpose of your loan..."
           value={purpose}
           onChangeText={setPurpose}
-          multiline
+          icon="description"
+          multiline={true}
+          numberOfLines={4}
         />
+        
+        {purposeError && (
+          <View className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+            <Text className="text-red-600 text-base">{purposeError}</Text>
       </View>
-      {purposeError ? <Text className="text-red-500 text-sm mb-3">{purposeError}</Text> : null}
+        )}
+      </LoanCard>
 
-      <TouchableOpacity className="bg-green-700 rounded-full py-3 mt-4" onPress={() => {
+      <LoanNavigationButtons
+        onBack={() => router.back()}
+        onNext={() => {
         if (validateStep1()) setStep(2);
-      }}>
-        <Text className="text-white text-center font-semibold text-base">Next</Text>
-      </TouchableOpacity>
-    </View>
+        }}
+        nextText="Continue to Personal Information"
+        showBack={false}
+      />
+    </ScrollView>
   );
 
   // Step 2: Personal Information
   const renderStep2 = () => (
-    <View>
-      <View className='flex flex-row items-center py-6'>
-        <TouchableOpacity onPress={() => setStep(1)}>
-          <Text><MaterialIcons name='arrow-back' size={18} color="#9CA3AF" /></Text>
-        </TouchableOpacity>
-        <Text className="text-lg font-bold text-green-700 text-center mb-2 flex-1">Loan Application</Text>
-      </View>
-      <View className="w-full h-2 bg-gray-200 rounded-full mb-6">
-        <View className="h-2 bg-green-700 rounded-full" style={{ width: '33%' }} />
-      </View>
-      <Text className="text-center text-xs text-gray-400 mb-2">Step 2 of 6</Text>
-      <Text className="text-green-700 font-bold mb-1">Step 2: Personal Information</Text>
-      <Text className="text-gray-500 mb-6">Provide your personal details</Text>
+    <ScrollView className="flex-1 bg-gray-50 px-8" showsVerticalScrollIndicator={false}>
+      <LoanStepHeader
+        step={2}
+        totalSteps={6}
+        title="Personal Information"
+        subtitle="Provide your personal details"
+        onBack={() => setStep(1)}
+      />
 
-      <Text className="font-semibold mb-1">First Name</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="person" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
+      <LoanCard title="Personal Details">
+        {/* All fields in horizontal layout */}
+        <LoanInputField
+          label="First Name"
           placeholder="Enter first name"
           value={personalInfo.firstName}
           onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, firstName: text }))}
+          icon="person"
         />
-      </View>
-
-      <Text className="font-semibold mb-1">Last Name</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="person" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
+        
+        <LoanInputField
+          label="Last Name"
           placeholder="Enter last name"
           value={personalInfo.lastName}
           onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, lastName: text }))}
+          icon="person"
         />
-      </View>
 
-      <Text className="font-semibold mb-1">ID Number</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="badge" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
+        <LoanInputField
+          label="ID Number"
           placeholder="Enter ID number"
           value={personalInfo.idNumber}
           onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, idNumber: text }))}
+          icon="badge"
         />
-      </View>
 
-      <Text className="font-semibold mb-1">Date of Birth</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="event" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
+        <LoanInputField
+          label="Date of Birth"
           placeholder="YYYY-MM-DD"
           value={personalInfo.dateOfBirth}
           onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, dateOfBirth: text }))}
+          icon="event"
         />
-      </View>
 
-      <Text className="font-semibold mb-1">Street Address</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="location-on" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
+        <LoanInputField
+          label="Street Address"
           placeholder="Enter street address"
           value={personalInfo.streetAddress}
           onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, streetAddress: text }))}
+          icon="location-on"
         />
-      </View>
 
-      <Text className="font-semibold mb-1">City</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="location-city" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
+        <LoanInputField
+          label="City"
           placeholder="Enter city"
           value={personalInfo.city}
           onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, city: text }))}
+          icon="location-city"
         />
-      </View>
 
-      <Text className="font-semibold mb-1">State/Province</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="map" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
+        <LoanInputField
+          label="State/Province"
           placeholder="Enter state/province"
           value={personalInfo.state}
           onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, state: text }))}
+          icon="map"
         />
-      </View>
 
-      <Text className="font-semibold mb-1">Postal Code</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="mark-email-unread" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
+        <LoanInputField
+          label="Postal Code"
           placeholder="Enter postal code"
           value={personalInfo.postalCode}
           onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, postalCode: text }))}
+          icon="markunread-mailbox"
         />
-      </View>
 
-      <Text className="font-semibold mb-1">Country</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="public" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
+        <LoanInputField
+          label="Country"
           placeholder="Enter country"
           value={personalInfo.country}
           onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, country: text }))}
+          icon="public"
         />
-      </View>
+      </LoanCard>
 
-      <View className="flex-row justify-between mt-4">
-        <TouchableOpacity className="bg-gray-200 rounded-full py-3 px-10 mr-2" onPress={() => setStep(1)}>
-          <Text className="text-gray-700 text-center font-semibold text-base">Back</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="flex-1 bg-green-700 rounded-full py-3 ml-2" onPress={() => {
+      <LoanNavigationButtons
+        onBack={() => setStep(1)}
+        onNext={() => {
           if (validateStep2()) setStep(3);
-        }}>
-          <Text className="text-white text-center font-semibold text-base">Next</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+        }}
+        nextText="Continue to Financial Info"
+      />
+    </ScrollView>
   );
 
   // Step 3: Financial Information
   const renderStep3 = () => (
-    <View>
-      <View className='flex flex-row items-center py-6'>
-        <TouchableOpacity onPress={() => setStep(2)}>
-          <Text><MaterialIcons name='arrow-back' size={18} color="#9CA3AF" /></Text>
-        </TouchableOpacity>
-        <Text className="text-lg font-bold text-green-700 text-center mb-2 flex-1">Loan Application</Text>
-      </View>
-      <View className="w-full h-2 bg-gray-200 rounded-full mb-6">
-        <View className="h-2 bg-green-700 rounded-full" style={{ width: '50%' }} />
-      </View>
-      <Text className="text-center text-xs text-gray-400 mb-2">Step 3 of 6</Text>
-      <Text className="text-green-700 font-bold mb-1">Step 3: Financial Information</Text>
-      <Text className="text-gray-500 mb-6">Provide your financial details</Text>
+    <ScrollView className="flex-1 bg-gray-50 px-8" showsVerticalScrollIndicator={false}>
+      <LoanStepHeader
+        step={3}
+        totalSteps={6}
+        title="Financial Information"
+        subtitle="Provide your financial details"
+        onBack={() => setStep(2)}
+      />
 
-      <Text className="font-semibold mb-1">Monthly Income ($)</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="payments" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
+      <LoanCard title="Income Information">
+        <LoanInputField
+          label="Monthly Income"
           placeholder="Enter monthly income"
           value={financialInfo.monthlyIncome.toString()}
           onChangeText={(text) => setFinancialInfo(prev => ({ ...prev, monthlyIncome: Number(text) || 0 }))}
+          icon="attach-money"
           keyboardType="numeric"
         />
-      </View>
 
-      <Text className="font-semibold mb-1">Annual Income ($)</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="account-balance" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
+        <LoanInputField
+          label="Annual Income"
           placeholder="Enter annual income"
           value={financialInfo.annualIncome.toString()}
           onChangeText={(text) => setFinancialInfo(prev => ({ ...prev, annualIncome: Number(text) || 0 }))}
+          icon="account-balance-wallet"
           keyboardType="numeric"
         />
-      </View>
 
-      <Text className="font-semibold mb-1">Income Source</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="work" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
-          placeholder="farming, employment, business, other"
+        <LoanInputField
+          label="Income Source"
+          placeholder="Select income source"
           value={financialInfo.incomeSource}
           onChangeText={(text) => setFinancialInfo(prev => ({ ...prev, incomeSource: text as any }))}
+          icon="work"
         />
-      </View>
 
-      <Text className="font-semibold mb-1">Employment Status</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="person" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
-          placeholder="employed, self-employed, unemployed, retired"
+        <LoanInputField
+          label="Employment Status"
+          placeholder="Select employment status"
           value={financialInfo.employmentStatus}
           onChangeText={(text) => setFinancialInfo(prev => ({ ...prev, employmentStatus: text as any }))}
+          icon="person"
         />
-      </View>
+      </LoanCard>
 
-      <Text className="font-semibold mb-1">Farming Experience (Years)</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="schedule" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
-          placeholder="Enter years of farming experience"
+      <LoanCard title="Farming Information">
+        <LoanInputField
+          label="Farming Experience (Years)"
+          placeholder="Enter years of experience"
           value={financialInfo.farmingExperience.toString()}
           onChangeText={(text) => setFinancialInfo(prev => ({ ...prev, farmingExperience: Number(text) || 0 }))}
+          icon="schedule"
           keyboardType="numeric"
         />
-      </View>
 
-      <Text className="font-semibold mb-1">Farm Type</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="agriculture" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
-          placeholder="crop, livestock, mixed, other"
+        <LoanInputField
+          label="Farm Type"
+          placeholder="Select farm type"
           value={financialInfo.farmType}
           onChangeText={(text) => setFinancialInfo(prev => ({ ...prev, farmType: text as any }))}
+          icon="agriculture"
         />
-      </View>
+      </LoanCard>
 
-      <Text className="font-semibold mb-1">Bank Name</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="account-balance" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
+      <LoanCard title="Banking Information">
+        <LoanInputField
+          label="Bank Name"
           placeholder="Enter bank name"
           value={financialInfo.bankName}
           onChangeText={(text) => setFinancialInfo(prev => ({ ...prev, bankName: text }))}
+          icon="account-balance"
         />
-      </View>
 
-      <Text className="font-semibold mb-1">Bank Branch</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="location-on" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
+        <LoanInputField
+          label="Bank Branch"
           placeholder="Enter bank branch"
           value={financialInfo.bankBranch}
           onChangeText={(text) => setFinancialInfo(prev => ({ ...prev, bankBranch: text }))}
+          icon="location-on"
         />
-      </View>
 
-      <Text className="font-semibold mb-1">Account Number</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="credit-card" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
+        <LoanInputField
+          label="Account Number"
           placeholder="Enter account number"
           value={financialInfo.accountNumber}
           onChangeText={(text) => setFinancialInfo(prev => ({ ...prev, accountNumber: text }))}
+          icon="credit-card"
         />
-      </View>
 
-      <Text className="font-semibold mb-1">Account Holder Name</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="person" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
+        <LoanInputField
+          label="Account Holder Name"
           placeholder="Enter account holder name"
           value={financialInfo.accountHolderName}
           onChangeText={(text) => setFinancialInfo(prev => ({ ...prev, accountHolderName: text }))}
+          icon="person"
         />
-      </View>
+      </LoanCard>
 
-      <View className="flex-row justify-between mt-4">
-        <TouchableOpacity className="bg-gray-200 rounded-full py-3 px-10 mr-2" onPress={() => setStep(2)}>
-          <Text className="text-gray-700 text-center font-semibold text-base">Back</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="flex-1 bg-green-700 rounded-full py-3 ml-2" onPress={() => {
+      <LoanNavigationButtons
+        onBack={() => setStep(2)}
+        onNext={() => {
           if (validateStep3()) setStep(4);
-        }}>
-          <Text className="text-white text-center font-semibold text-base">Next</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+        }}
+        nextText="Continue to Documents"
+      />
+    </ScrollView>
   );
 
   // Step 4: Document Upload
   const renderStep4 = () => (
-    <View>
-      <View className='flex flex-row items-center py-6'>
-        <TouchableOpacity onPress={() => setStep(3)}>
-          <Text><MaterialIcons name='arrow-back' size={18} color="#9CA3AF" /></Text>
-        </TouchableOpacity>
-        <Text className="text-lg font-bold text-green-700 text-center mb-2 flex-1">Loan Application</Text>
-      </View>
-      <View className="w-full h-2 bg-gray-200 rounded-full mb-6">
-        <View className="h-2 bg-green-700 rounded-full" style={{ width: '67%' }} />
-      </View>
-      <Text className="text-center text-xs text-gray-400 mb-2">Step 4 of 6</Text>
-      <Text className="text-green-700 font-bold mb-1">Step 4: Document Upload</Text>
-      <Text className="text-gray-500 mb-6">Upload required documents</Text>
+    <ScrollView className="flex-1 bg-gray-50 px-8" showsVerticalScrollIndicator={false}>
+      <LoanStepHeader
+        step={4}
+        totalSteps={6}
+        title="Document Upload"
+        subtitle="Upload required documents"
+        onBack={() => setStep(3)}
+      />
 
-      {/* ID Photo Upload */}
-      <View className="mb-4">
-        <Text className="font-semibold mb-2">ID Photo (Required)</Text>
-        <TouchableOpacity 
-          className="border-2 border-dashed border-gray-300 rounded-lg p-4 items-center"
-          onPress={() => pickImage('idPhoto')}
-        >
-          {documents.idPhoto ? (
-            <Image source={{ uri: documents.idPhoto }} className="w-20 h-20 rounded-lg" />
-          ) : (
-            <View className="items-center">
-              <MaterialIcons name="add-a-photo" size={40} color="#9CA3AF" />
-              <Text className="text-gray-500 mt-2">Upload ID Photo</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {/* Proof of Income Upload */}
-      <View className="mb-4">
-        <Text className="font-semibold mb-2">Proof of Income (Required)</Text>
-        <TouchableOpacity 
-          className="border-2 border-dashed border-gray-300 rounded-lg p-4 items-center"
+      <LoanCard title="Required Documents">
+        <DocumentUploadField
+          label="Proof of Income"
+          icon="receipt"
           onPress={() => pickImage('proofOfIncome')}
-        >
-          {documents.proofOfIncome ? (
-            <Image source={{ uri: documents.proofOfIncome }} className="w-20 h-20 rounded-lg" />
-          ) : (
-            <View className="items-center">
-              <MaterialIcons name="description" size={40} color="#9CA3AF" />
-              <Text className="text-gray-500 mt-2">Upload Proof of Income</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
+          value={documents.proofOfIncome}
+          placeholder="Upload proof of income"
+          required={true}
+        />
 
-      {/* Farm Ownership Documents Upload */}
-      <View className="mb-4">
-        <Text className="font-semibold mb-2">Farm Ownership Documents (Required)</Text>
-        <TouchableOpacity 
-          className="border-2 border-dashed border-gray-300 rounded-lg p-4 items-center"
+        <DocumentUploadField
+          label="Farm Ownership Documents"
+          icon="description"
           onPress={() => pickImage('farmOwnershipDocuments')}
-        >
-          {documents.farmOwnershipDocuments ? (
-            <Image source={{ uri: documents.farmOwnershipDocuments }} className="w-20 h-20 rounded-lg" />
-          ) : (
-            <View className="items-center">
-              <MaterialIcons name="folder" size={40} color="#9CA3AF" />
-              <Text className="text-gray-500 mt-2">Upload Farm Documents</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
+          value={documents.farmOwnershipDocuments}
+          placeholder="Upload farm ownership documents"
+          required={true}
+        />
 
-      {/* Cooperative Membership Upload */}
-      <View className="mb-4">
-        <Text className="font-semibold mb-2">Proof of Cooperative Membership (Required)</Text>
-        <TouchableOpacity 
-          className="border-2 border-dashed border-gray-300 rounded-lg p-4 items-center"
+        <DocumentUploadField
+          label="Cooperative Membership"
+          icon="group"
           onPress={() => pickImage('cooperativeMembership')}
-        >
-          {documents.cooperativeMembership ? (
-            <Image source={{ uri: documents.cooperativeMembership }} className="w-20 h-20 rounded-lg" />
-          ) : (
-            <View className="items-center">
-              <MaterialIcons name="groups" size={40} color="#9CA3AF" />
-              <Text className="text-gray-500 mt-2">Upload Cooperative Membership</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
+          value={documents.cooperativeMembership}
+          placeholder="Upload cooperative membership proof"
+          required={false}
+        />
+      </LoanCard>
 
-      {/* Tree Images Upload */}
-      <View className="mb-4">
-        <Text className="font-semibold mb-2">Tree Images (Optional - Max 15)</Text>
-        <TouchableOpacity 
-          className="border-2 border-dashed border-gray-300 rounded-lg p-4 items-center"
-          onPress={() => pickImage('treeImages')}
-        >
-          <View className="items-center">
-            <MaterialIcons name="nature" size={40} color="#9CA3AF" />
-            <Text className="text-gray-500 mt-2">Add Tree Images ({documents.treeImages.length}/15)</Text>
-          </View>
-        </TouchableOpacity>
+      <LoanCard title="Tree Images (Optional)">
+        <View className="mb-6">
+          <Text className="font-semibold text-gray-700 mb-3 text-base">
+            Tree Images (Max 15)
+          </Text>
+          <TouchableOpacity 
+            onPress={() => pickImage('treeImages')}
+            className="border border-gray-200 rounded-2xl px-5 py-4 bg-white"
+          >
+            <View className="flex-row items-center">
+              <PhotoIcon size={24} color="#059669" />
+              <Text className="flex-1 text-gray-500 ml-4 text-base">
+                Upload tree images ({documents.treeImages.length}/15)
+              </Text>
+              <PlusIcon size={24} color="#059669" />
+            </View>
+          </TouchableOpacity>
+        </View>
         
         {/* Display uploaded tree images */}
         {documents.treeImages.length > 0 && (
-          <View className="mt-2">
-            <Text className="text-sm text-gray-600 mb-2">Uploaded Images:</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {documents.treeImages.map((uri, index) => (
-                <View key={index} className="mr-2 relative">
-                  <Image source={{ uri }} className="w-16 h-16 rounded-lg" />
-                  <TouchableOpacity 
-                    className="absolute -top-2 -right-2 bg-red-500 rounded-full w-6 h-6 items-center justify-center"
-                    onPress={() => removeTreeImage(index)}
-                  >
-                    <Text className="text-white text-xs">×</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </ScrollView>
+          <View className="flex-row flex-wrap">
+            {documents.treeImages.map((image, index) => (
+              <View key={index} className="relative mr-3 mb-3">
+                <Image
+                  source={{ uri: image }}
+                  className="w-24 h-24 rounded-xl"
+                />
+                <TouchableOpacity 
+                  onPress={() => removeTreeImage(index)}
+                  className="absolute -top-2 -right-2 bg-red-500 rounded-full w-7 h-7 items-center justify-center"
+                >
+                  <XMarkIcon size={18} color="white" />
+                </TouchableOpacity>
+              </View>
+            ))}
           </View>
         )}
-      </View>
+      </LoanCard>
 
-      <View className="flex-row justify-between mt-4">
-        <TouchableOpacity className="bg-gray-200 rounded-full py-3 px-10 mr-2" onPress={() => setStep(3)}>
-          <Text className="text-gray-700 text-center font-semibold text-base">Back</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="flex-1 bg-green-700 rounded-full py-3 ml-2" onPress={() => {
+      <LoanNavigationButtons
+        onBack={() => setStep(3)}
+        onNext={() => {
           if (validateStep4()) setStep(5);
-        }}>
-          <Text className="text-white text-center font-semibold text-base">Next</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+        }}
+        nextText="Continue to Repayment Terms"
+      />
+    </ScrollView>
   );
 
-  // Step 5: Repayment Terms
+  // Step 5: Repayment Terms (Read-only from product)
   const renderStep5 = () => (
-    <View>
-      <View className='flex flex-row items-center py-6'>
-        <TouchableOpacity onPress={() => setStep(4)}>
-          <Text><MaterialIcons name='arrow-back' size={18} color="#9CA3AF" /></Text>
-        </TouchableOpacity>
-        <Text className="text-lg font-bold text-green-700 text-center mb-2 flex-1">Loan Application</Text>
-      </View>
-      <View className="w-full h-2 bg-gray-200 rounded-full mb-6">
-        <View className="h-2 bg-green-700 rounded-full" style={{ width: '83%' }} />
-      </View>
-      <Text className="text-center text-xs text-gray-400 mb-2">Step 5 of 6</Text>
-      <Text className="text-green-700 font-bold mb-1">Step 5: Repayment Terms</Text>
-      <Text className="text-gray-500 mb-6">Set your repayment preferences</Text>
+    <ScrollView className="flex-1 bg-gray-50 px-8" showsVerticalScrollIndicator={false}>
+      <LoanStepHeader
+        step={5}
+        totalSteps={6}
+        title="Repayment Terms"
+        subtitle="Review your loan repayment terms"
+        onBack={() => setStep(4)}
+      />
 
-      <Text className="font-semibold mb-1">Term (months)</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="date-range" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
-          placeholder="8"
-          value={term}
-          onChangeText={setTerm}
-          keyboardType="numeric"
+      <LoanCard title="Loan Summary">
+        <LoanInputField
+          label="Loan Term"
+          placeholder=""
+          value={Number(term) >= 12 ? `${Math.round(Number(term) / 12)} years` : `${term} months`}
+          onChangeText={() => {}}
+          icon="schedule"
+          readOnly={true}
         />
-      </View>
-
-      <Text className="font-semibold mb-1">Interest Rate (%)</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="percent" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
-          placeholder="8.0"
-          value={interestRate}
-          onChangeText={setInterestRate}
-          keyboardType="numeric"
+        <LoanInputField
+          label="Interest Rate"
+          placeholder=""
+          value={`${interestRate}%`}
+          onChangeText={() => {}}
+          icon="percent"
+          readOnly={true}
         />
-      </View>
-
-      <Text className="font-semibold mb-1">Est. Monthly Payment</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-md px-3 py-2 bg-white mb-3">
-        <MaterialIcons name="payments" size={18} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 text-base ml-2"
-          placeholder="$90.15"
-          value={monthlyPayment}
-          onChangeText={setMonthlyPayment}
-          keyboardType="numeric"
-          editable={false}
+        <LoanInputField
+          label="Monthly Payment"
+          placeholder=""
+          value={`$${Number(monthlyPayment).toLocaleString()}`}
+          onChangeText={() => {}}
+          icon="payment"
+          readOnly={true}
         />
-      </View>
+        <LoanInputField
+          label="Total Interest"
+          placeholder=""
+          value={`$${((Number(monthlyPayment) * Number(term)) - Number(amount)).toFixed(2)}`}
+          onChangeText={() => {}}
+          icon="trending-up"
+          readOnly={true}
+        />
+        <LoanInputField
+          label="Total Repayment"
+          placeholder=""
+          value={`$${(Number(monthlyPayment) * Number(term)).toFixed(2)}`}
+          onChangeText={() => {}}
+          icon="account-balance-wallet"
+          readOnly={true}
+        />
+      </LoanCard>
 
-      <View className="flex-row justify-between mt-4">
-        <TouchableOpacity className="bg-gray-200 rounded-full py-3 px-10 mr-2" onPress={() => setStep(4)}>
-          <Text className="text-gray-700 text-center font-semibold text-base">Back</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="flex-1 bg-green-700 rounded-full py-3 ml-2" onPress={() => setStep(6)}>
-          <Text className="text-white text-center font-semibold text-base">Next</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+      <LoanNavigationButtons
+        onBack={() => setStep(4)}
+        onNext={() => setStep(6)}
+        nextText="Review & Submit"
+      />
+    </ScrollView>
   );
 
   // Step 6: Review & Submit
   const renderStep6 = () => (
-    <View>
-      <View className='flex flex-row items-center py-6'>
-        <TouchableOpacity onPress={() => setStep(5)}>
-          <Text><MaterialIcons name='arrow-back' size={18} color="#9CA3AF" /></Text>
-        </TouchableOpacity>
-        <Text className="text-lg font-bold text-green-700 text-center mb-2 flex-1">Loan Application</Text>
-      </View>
-      <View className="w-full h-2 bg-gray-200 rounded-full mb-6">
-        <View className="h-2 bg-green-700 rounded-full" style={{ width: '100%' }} />
-      </View>
-      <Text className="text-center text-xs text-gray-400 mb-2">Step 6 of 6</Text>
-      <Text className="text-green-700 font-bold mb-1">Step 6: Review & Submit</Text>
-      <Text className="text-gray-500 mb-6">Please review your application details</Text>
+    <ScrollView className="flex-1 bg-gray-50 px-8" showsVerticalScrollIndicator={false}>
+      <LoanStepHeader
+        step={6}
+        totalSteps={6}
+        title="Review & Submit"
+        subtitle="Please review your application details"
+        onBack={() => setStep(5)}
+      />
 
       {/* Personal Information Card */}
-      <View className="bg-gray-50 rounded-xl shadow p-4 mb-4 border border-gray-100">
-        <View className="flex-row items-center mb-2">
-          <MaterialIcons name="person" size={22} color="#15803d" />
-          <Text className="font-bold ml-2">Personal Information</Text>
+      <LoanCard title="Personal Information">
+        <View className="space-y-4">
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 text-base">Name:</Text>
+            <Text className="font-semibold text-base">{personalInfo.firstName} {personalInfo.lastName}</Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 text-base">ID Number:</Text>
+            <Text className="font-semibold text-base">{personalInfo.idNumber}</Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 text-base">Date of Birth:</Text>
+            <Text className="font-semibold text-base">{personalInfo.dateOfBirth}</Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 text-base">Address:</Text>
+            <Text className="font-semibold text-base">{personalInfo.streetAddress}, {personalInfo.city}</Text>
+          </View>
         </View>
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-gray-500">Name:</Text>
-          <Text className="font-semibold">{personalInfo.firstName} {personalInfo.lastName}</Text>
-        </View>
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-gray-500">ID Number:</Text>
-          <Text className="font-semibold">{personalInfo.idNumber}</Text>
-        </View>
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-gray-500">Date of Birth:</Text>
-          <Text className="font-semibold">{personalInfo.dateOfBirth}</Text>
-        </View>
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-gray-500">Address:</Text>
-          <Text className="font-semibold">{personalInfo.streetAddress}, {personalInfo.city}</Text>
-        </View>
-      </View>
+      </LoanCard>
 
       {/* Loan Details Card */}
-      <View className="bg-gray-50 rounded-xl shadow p-4 mb-4 border border-gray-100">
-        <View className="flex-row items-center mb-2">
-          <MaterialIcons name="account-balance-wallet" size={22} color="#15803d" />
-          <Text className="font-bold ml-2">Loan Details</Text>
+      <LoanCard title="Loan Details">
+        <View className="space-y-4">
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 text-base">Loan Type:</Text>
+            <Text className="font-semibold text-base">{loanType}</Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 text-base">Amount:</Text>
+            <Text className="font-semibold text-base">${Number(amount).toLocaleString()}</Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 text-base">Interest Rate:</Text>
+            <Text className="font-semibold text-base">{interestRate}%</Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 text-base">Term:</Text>
+            <Text className="font-semibold text-base">
+              {Number(term) >= 12 ? `${Math.round(Number(term) / 12)} years` : `${term} months`}
+            </Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 text-base">Monthly Payment:</Text>
+            <Text className="font-semibold text-base">${Number(monthlyPayment).toLocaleString()}</Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 text-base">Purpose:</Text>
+            <Text className="font-semibold text-base">{purpose}</Text>
+          </View>
         </View>
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-gray-500">Loan Type:</Text>
-          <Text className="font-semibold">{loanType}</Text>
-        </View>
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-gray-500">Amount:</Text>
-          <Text className="font-semibold">${amount}</Text>
-        </View>
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-gray-500">Purpose:</Text>
-          <Text className="font-semibold">{purpose}</Text>
-        </View>
-      </View>
+      </LoanCard>
 
       {/* Financial Information Card */}
-      <View className="bg-gray-50 rounded-xl shadow p-4 mb-4 border border-gray-100">
-        <View className="flex-row items-center mb-2">
-          <MaterialIcons name="account-balance" size={22} color="#15803d" />
-          <Text className="font-bold ml-2">Financial Information</Text>
+      <LoanCard title="Financial Information">
+        <View className="space-y-4">
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 text-base">Monthly Income:</Text>
+            <Text className="font-semibold text-base">${financialInfo.monthlyIncome.toLocaleString()}</Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 text-base">Annual Income:</Text>
+            <Text className="font-semibold text-base">${financialInfo.annualIncome.toLocaleString()}</Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 text-base">Income Source:</Text>
+            <Text className="font-semibold text-base">{financialInfo.incomeSource}</Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 text-base">Employment Status:</Text>
+            <Text className="font-semibold text-base">{financialInfo.employmentStatus}</Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 text-base">Farming Experience:</Text>
+            <Text className="font-semibold text-base">{financialInfo.farmingExperience} years</Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 text-base">Farm Type:</Text>
+            <Text className="font-semibold text-base">{financialInfo.farmType}</Text>
+          </View>
         </View>
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-gray-500">Monthly Income:</Text>
-          <Text className="font-semibold">${financialInfo.monthlyIncome}</Text>
-        </View>
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-gray-500">Income Source:</Text>
-          <Text className="font-semibold">{financialInfo.incomeSource}</Text>
-        </View>
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-gray-500">Bank:</Text>
-          <Text className="font-semibold">{financialInfo.bankName}</Text>
-        </View>
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-gray-500">Account:</Text>
-          <Text className="font-semibold">****{financialInfo.accountNumber.slice(-4)}</Text>
-        </View>
-      </View>
+      </LoanCard>
 
-      {/* Documents Card */}
-      <View className="bg-gray-50 rounded-xl shadow p-4 mb-4 border border-gray-100">
-        <View className="flex-row items-center mb-2">
-          <MaterialIcons name="folder" size={22} color="#15803d" />
-          <Text className="font-bold ml-2">Documents</Text>
+      {/* Banking Information Card */}
+      <LoanCard title="Banking Information">
+        <View className="space-y-4">
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 text-base">Bank Name:</Text>
+            <Text className="font-semibold text-base">{financialInfo.bankName}</Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 text-base">Bank Branch:</Text>
+            <Text className="font-semibold text-base">{financialInfo.bankBranch}</Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 text-base">Account Number:</Text>
+            <Text className="font-semibold text-base">{financialInfo.accountNumber}</Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-500 text-base">Account Holder:</Text>
+            <Text className="font-semibold text-base">{financialInfo.accountHolderName}</Text>
+          </View>
         </View>
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-gray-500">ID Photo:</Text>
-          <Text className="font-semibold">{documents.idPhoto ? '✓ Uploaded' : '✗ Missing'}</Text>
-        </View>
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-gray-500">Proof of Income:</Text>
-          <Text className="font-semibold">{documents.proofOfIncome ? '✓ Uploaded' : '✗ Missing'}</Text>
-        </View>
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-gray-500">Farm Documents:</Text>
-          <Text className="font-semibold">{documents.farmOwnershipDocuments ? '✓ Uploaded' : '✗ Missing'}</Text>
-        </View>
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-gray-500">Cooperative Membership:</Text>
-          <Text className="font-semibold">{documents.cooperativeMembership ? '✓ Uploaded' : '✗ Missing'}</Text>
-        </View>
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-gray-500">Tree Images:</Text>
-          <Text className="font-semibold">{documents.treeImages.length} uploaded</Text>
-        </View>
-      </View>
+      </LoanCard>
 
-      {/* Repayment Terms Card */}
-      <View className="bg-gray-50 rounded-xl shadow p-4 mb-4 border border-gray-100">
-        <View className="flex-row items-center mb-2">
-          <MaterialIcons name="event" size={22} color="#15803d" />
-          <Text className="font-bold ml-2">Repayment Terms</Text>
-        </View>
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-gray-500">Term:</Text>
-          <Text className="font-semibold">{term} months</Text>
-        </View>
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-gray-500">Interest Rate:</Text>
-          <Text className="font-semibold">{interestRate}% per annum</Text>
-        </View>
-        <View className="flex-row justify-between mb-1">
-          <Text className="text-gray-500">Est. Monthly Payment:</Text>
-          <Text className="font-semibold">${monthlyPayment}</Text>
-        </View>
-      </View>
-
-      <Text className="text-xs text-gray-400 mb-3 text-center">
-        By submitting this application, you confirm that all information provided is accurate and complete.
-      </Text>
-
-      <View className="flex-row justify-between mt-2">
-        <TouchableOpacity className="bg-gray-200 rounded-full py-3 px-10 mr-2" onPress={() => setStep(5)}>
-          <Text className="text-gray-700 text-center font-semibold text-base">Back</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="flex-1 bg-green-700 rounded-full py-3 ml-2" onPress={handleSubmit} disabled={loading}>
-          <Text className="text-white text-center font-semibold text-base">{loading ? 'Submitting...' : 'Submit Application'}</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+      <LoanNavigationButtons
+        onBack={() => setStep(5)}
+        onNext={handleSubmit}
+        nextText="Submit Application"
+        showBack={true}
+      />
+    </ScrollView>
   );
 
   return (

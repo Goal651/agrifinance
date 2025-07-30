@@ -1,10 +1,16 @@
-import React, { createContext, useContext } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { AuthService } from '@/api/auth';
+import React, { createContext, useContext } from 'react';
 
-const AuthContext = createContext<AuthService | null>(null);
+// Define the auth context type based on what useAuth returns
+type AuthContextType = {
+    login: (data: any) => Promise<void>;
+    signup: (data: any) => Promise<void>;
+    loading: boolean;
+} | null;
 
-export const AuthProvider = ({ children }) => {
+const AuthContext = createContext<AuthContextType>(null);
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const auth = useAuth();
     return (
         <AuthContext.Provider value={auth}>

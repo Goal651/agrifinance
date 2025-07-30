@@ -1,6 +1,11 @@
 package com.agrifinance.backend.seed;
 
-import com.agrifinance.backend.model.*;
+import com.agrifinance.backend.model.user.User;
+import com.agrifinance.backend.model.user.Role;
+import com.agrifinance.backend.model.user.Address;
+import com.agrifinance.backend.model.loan.Loan;
+import com.agrifinance.backend.model.loan.LoanProduct;
+import com.agrifinance.backend.model.project.Project;
 import com.agrifinance.backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;

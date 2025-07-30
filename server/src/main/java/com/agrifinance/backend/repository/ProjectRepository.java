@@ -1,6 +1,6 @@
 package com.agrifinance.backend.repository;
 
-import com.agrifinance.backend.model.Project;
+import com.agrifinance.backend.model.project.Project;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
