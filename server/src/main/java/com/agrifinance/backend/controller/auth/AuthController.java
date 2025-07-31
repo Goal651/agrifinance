@@ -29,10 +29,9 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody AuthRequest request) {
-        System.out.println("Testing the system");
+        System.out.println("Testing the system"+request);
         Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
-        if (userOpt.isEmpty() || !passwordEncoder.matches(request.getPassword(), userOpt.get().getPassword())
-                || userOpt.get().getRole() != Role.USER) {
+        if (userOpt.isEmpty() || !passwordEncoder.matches(request.getPassword(), userOpt.get().getPassword())) {
             return ResponseEntity.ok(new ApiResponse<>(false, null, "Invalid credentials"));
         }
         User user = userOpt.get();

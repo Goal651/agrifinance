@@ -7,7 +7,6 @@ import com.agrifinance.backend.dto.loan.LoanRequest;
 import com.agrifinance.backend.service.loan.LoanService;
 import com.agrifinance.backend.security.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

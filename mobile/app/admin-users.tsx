@@ -19,8 +19,9 @@ const initialUsers: User[] = [
     { name: 'Michael Wilson', email: 'michael@example.com', phone: '+1777888999', farmType: 'Dairy Farming', status: 'Active' },
     { name: 'Robert Johnson', email: 'robert@example.com', phone: '+1122334455', farmType: 'Mixed Farming', status: 'Inactive' },
 ];
-const router = useRouter();
+
 export default function AdminUsers() {
+    const router = useRouter();
     const [users, setUsers] = useState(initialUsers);
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState('all');

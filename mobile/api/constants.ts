@@ -1,6 +1,6 @@
 // API Configuration Constants
 
-const SERVER_URL = 'http://192.168.89.223:8089'
+const SERVER_URL = 'http://192.168.1.70:8089'
 
 export const API_CONFIG = {
   BASE_URL: SERVER_URL,

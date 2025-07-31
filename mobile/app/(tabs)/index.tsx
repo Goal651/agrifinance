@@ -54,6 +54,12 @@ export default function TabsHome() {
                         size="large"
                     />
                 </Card>
+                <Button
+                        title="Logout"
+                        onPress={() => router.push('/login')}
+                        variant="outline"
+                        size="large"
+                    />
             </ScrollView>
         </View>
     );

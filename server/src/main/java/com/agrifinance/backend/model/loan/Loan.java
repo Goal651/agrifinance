@@ -1,11 +1,15 @@
 package com.agrifinance.backend.model.loan;
 
-import jakarta.persistence.*;
-import lombok.*;
+import com.agrifinance.backend.model.enums.LoanStatus;
 import com.agrifinance.backend.model.user.User;
-import com.agrifinance.backend.model.loan.LoanPayment;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,14 +27,33 @@ public class Loan {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
-    private Double interest;
-    private Double amount;
-    private String status; // e.g., PENDING, APPROVED, REJECTED
-    private String type; // e.g., SEED, EQUIPMENT, etc.
+
+    @Enumerated(EnumType.STRING)
+    private LoanStatus status;
+
+    @Embedded
+    private LoanDetails details;
+
+    @Embedded
+    private LoanInfo info;
+
+    private Double paidAmount;
+    
+    @OneToMany(mappedBy = "loan", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<LoanPayment> payments = new ArrayList<>();
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private String term; 
-    private Double paidAmount;
-    @OneToMany(mappedBy = "loan", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<LoanPayment> payments;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

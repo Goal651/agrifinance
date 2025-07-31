@@ -2,6 +2,7 @@ package com.agrifinance.backend.controller.loan;
 
 import com.agrifinance.backend.dto.common.ApiResponse;
 import com.agrifinance.backend.dto.loan.LoanDTO;
+import com.agrifinance.backend.model.enums.LoanStatus;
 import com.agrifinance.backend.service.loan.LoanService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 import java.util.UUID;
+
+/**
+ * Admin controller for managing loans.
+ * Provides endpoints for administrators to manage loan applications and statuses.
+ */
 
 @RestController
 @RequestMapping("/api/admin/loans")
@@ -44,7 +50,7 @@ public class AdminLoanController {
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<LoanDTO> updateStatus(@PathVariable UUID id, @RequestParam String status) {
-        return ResponseEntity.ok(loanService.updateLoanStatus(id, status));
+        return ResponseEntity.ok(loanService.updateLoanStatus(id, LoanStatus.valueOf(status)));
     }
 
     @GetMapping("/summary")

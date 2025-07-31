@@ -6,7 +6,7 @@ export interface AuthRequest {
 
 export interface AuthResponse {
     token: string
-    role:string
+    role:'USER'|'ADMIN'
     userId:string
 }
 

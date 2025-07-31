@@ -22,3 +22,4 @@ export interface User {
     zipCode: string
   }
 }
+

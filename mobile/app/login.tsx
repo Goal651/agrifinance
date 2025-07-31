@@ -1,21 +1,18 @@
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+import Input from '@/components/ui/Input';
 import { useAuth } from '@/hooks/useAuth';
-import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import Card from '@/components/ui/Card';
-import Header from '@/components/ui/Header';
 
-export default function AdminLoginScreen() {
+export default function LoginScreen() {
     const { login } = useAuth();
+    const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const router = useRouter();
-
     const isValidEmail = (email: string) => /.+@.+\..+/.test(email);
 
     const handleLogin = async () => {
@@ -31,28 +28,32 @@ export default function AdminLoginScreen() {
         setLoading(true);
         try {
             await login({ email, password });
+            // If we get here, login was successful and navigation was handled
         } catch (error) {
-            setError('Login failed. Please try again.');
+            console.error('Login failed:', error);
+            setError(error?.message || 'Login failed. Please try again.');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <View className="flex-1 bg-gray-50">
+        <View className="flex-1 bg-gray-50 px-8 py-10">
             <Toast/>
             
-            <Header
-                title="Admin Login"
-                subtitle="Access admin dashboard"
-                onBack={() => router.back()}
-            />
+            {/* Header */}
+            <View className="flex-1 justify-center">
+                {/* Logo */}
+                <View className="mb-12 text-center">
+                    <Text className="text-4xl font-bold text-green-700 text-center mb-3">AgriFinance</Text>
+                    <Text className="text-gray-500 text-center text-lg">Agricultural Loans & Project Management</Text>
+                </View>
 
-            <View className="flex-1 px-8">
-                <Card title="Admin Access">
+                {/* Login Form */}
+                <Card title="Welcome Back">
                     <Input
                         label="Email Address"
-                        placeholder="Enter admin email"
+                        placeholder="Enter your email"
                         value={email}
                         onChangeText={setEmail}
                         icon="mail"
@@ -63,11 +64,11 @@ export default function AdminLoginScreen() {
 
                     <Input
                         label="Password"
-                        placeholder="Enter admin password"
+                        placeholder="Enter your password"
                         value={password}
                         onChangeText={setPassword}
                         icon="lock"
-                        secureTextEntry
+                        secureTextEntry={!showPassword}
                         autoCapitalize="none"
                         required
                     />
@@ -79,33 +80,23 @@ export default function AdminLoginScreen() {
                     ) : null}
 
                     <Button
-                        title="Admin Sign In"
+                        title="Sign In"
                         onPress={handleLogin}
                         loading={loading}
                         size="large"
                         className="mb-6"
                     />
+
+                    {/* Forgot Password */}
+                    <View className="text-center mb-8">
+                        <Text className="text-green-700 text-center text-base font-semibold">
+                            Forgot Password?
+                        </Text>
+                    </View>
                 </Card>
 
-                {/* Back to User Login */}
-                <View className="text-center mb-8">
-                    <Text className="text-gray-500 text-center text-base">
-                        Not an admin?{' '}
-                        <Text 
-                            className="text-green-700 font-semibold"
-                            onPress={() => router.back()}
-                        >
-                            User Login
-                        </Text>
-                    </Text>
-                </View>
+               
             </View>
         </View>
     );
 }
-
-export const screen = {
-    options: {
-        headerShown: false,
-    },
-};

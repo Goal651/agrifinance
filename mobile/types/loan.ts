@@ -1,23 +1,38 @@
 import { User } from "./user"
 
 export interface Loan {
-    id: string
-    user: User
-    amount: number
-    interest: number
-    status: string
-    type: string
-    createdAt: Date
-    updatedAt: Date
-    paidAmount: number
-
-    payments: [{
-        id: string
-        amount: number
-        dueDate: Date
-        paidDate: Date
-        status: string
-    }]
+    id: string;
+    user: User;
+    status: string;
+    createdAt: Date;
+    updatedAt: Date;
+    
+    // Core loan details
+    details: {
+        amount: number;
+        interest: number;
+        type: string; // e.g., 'personal', 'business', etc.
+        term: number; // in months or years, depending on termType
+        termType: LoanTermType; // 'months' | 'years'
+        purpose: string; // e.g., 'education', 'home improvement', etc.
+    };
+    
+    // Financial tracking
+    payments: {
+        id: string;
+        amount: number;
+        dueDate: Date;
+        paidDate: Date;
+        status: string;
+    }[];
+    paidAmount: number;
+    
+    // User information
+    info: {
+        personal: PersonalInfo;
+        financial: FinancialInfo;
+        documents: DocumentUpload;
+    };
 }
 
 export type LoanTermType = 'months' | 'years';
@@ -46,7 +61,6 @@ export interface PersonalInfo {
 // Financial Information Interface
 export interface FinancialInfo {
     monthlyIncome: number;
-    annualIncome: number;
     incomeSource: 'farming' | 'employment' | 'business' | 'other';
     employmentStatus: 'employed' | 'self-employed' | 'unemployed' | 'retired';
     farmingExperience: number; // years
@@ -73,9 +87,9 @@ export interface LoanRequest {
     term: number // in months or years, depending on termType
     termType: LoanTermType; // use the defined type
     purpose: string // e.g., 'education', 'home improvement', etc.
-    personalInfo?: PersonalInfo;
-    financialInfo?: FinancialInfo;
-    documents?: DocumentUpload;
+    personalInfo: PersonalInfo;
+    financialInfo: FinancialInfo;
+    documents: DocumentUpload;
 }
 
 export interface LoanResponse {
@@ -90,30 +104,30 @@ export interface LoanResponse {
 }
 
 export interface LoanAnalytics {
-  totalLoans: number;
-  totalAmountBorrowed: number;
-  totalAmountRepaid: number;
-  totalInterestPaid: number;
-  activeLoans: number;
-  overduePayments: number;
-  nextPaymentDueDate: string | null;
-  nextPaymentAmount: number | null;
-  repaymentProgress: number;
-  loanBreakdown: {
-    loanId: string;
-    type: string;
-    amount: number;
-    interest: number;
-    status: string;
-    createdAt: string;
-    repaidAmount: number;
-    remainingAmount: number;
-  }[];
-  paymentHistory: {
-    paymentId: string;
-    loanId: string;
-    amount: number;
-    paidDate: string;
-    status: 'Paid' | 'Upcoming' | 'Overdue';
-  }[];
+    totalLoans: number;
+    totalAmountBorrowed: number;
+    totalAmountRepaid: number;
+    totalInterestPaid: number;
+    activeLoans: number;
+    overduePayments: number;
+    nextPaymentDueDate: string | null;
+    nextPaymentAmount: number | null;
+    repaymentProgress: number;
+    loanBreakdown: {
+        loanId: string;
+        type: string;
+        amount: number;
+        interest: number;
+        status: string;
+        createdAt: string;
+        repaidAmount: number;
+        remainingAmount: number;
+    }[];
+    paymentHistory: {
+        paymentId: string;
+        loanId: string;
+        amount: number;
+        paidDate: string;
+        status: 'Paid' | 'Upcoming' | 'Overdue';
+    }[];
 }
