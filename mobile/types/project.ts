@@ -1,11 +1,37 @@
-export interface Project {
+import { User } from "./user";
+
+
+interface GoalTask {
+  id: string;
+  title: string;
+  description: string;
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
+  priority: number; // 1-5 where 1 is highest
+  dueDate: string; // ISO date string
+  completedAt: string | null; // ISO date string
+}
+
+interface ProjectGoalDTO {
   id: string;
   name: string;
   description: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-  goals: Goal[];
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
+  dueDate: string | null; // ISO date string
+  completedAt: string | null; // ISO date string
+  tasks: GoalTask[];
+}
+
+export interface Project {
+  id: string;
+  user: User;
+  name: string;
+  description: string;
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'ON_HOLD';
+  targetDate: string | null; // ISO date string
+  completedAt: string | null; // ISO date string
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+  goals: ProjectGoalDTO[];
 }
 
 export interface Goal {

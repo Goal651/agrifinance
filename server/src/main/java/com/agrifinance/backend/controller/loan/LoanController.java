@@ -29,13 +29,7 @@ public class LoanController {
         return UUID.fromString(jwtUtil.getClaims(token).get("userId", String.class));
     }
 
-    @GetMapping("/overview")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponse<LoanDTO>> getOverview(HttpServletRequest request) {
-        LoanDTO data = loanService.getLoanOverview(getUserId(request));
-        return ResponseEntity.ok(new ApiResponse<>(true, data, "Loan overview fetched successfully"));
-    }
-
+ 
 
     @GetMapping("/history")
     @PreAuthorize("hasRole('USER')")

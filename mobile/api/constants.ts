@@ -33,8 +33,8 @@ export const API_ENDPOINTS = {
     CURRENT: '/loans/current',
     APPLY: '/loans/apply',
     PRODUCT: `/loan-products`,
-    ANALYTICS:  `/loans/analytics`,
-    PAYMENTS:'/loans/payments',
+    ANALYTICS: `/loans/analytics`,
+    PAYMENTS: '/loans/payments',
   },
   PROJECT: {
     LIST: '/projects',
@@ -45,18 +45,15 @@ export const API_ENDPOINTS = {
     ANALYTICS: '/projects/analytics',
   },
   ADMIN: {
-    USERS: '/admin/users',
-    USER_BY_ID: (id: number) => `/admin/users/${id}`,
-    UPDATE_USER: (id: number) => `/admin/users/${id}`,
-    DELETE_USER: (id: number) => `/admin/users/${id}`,
-    GROUPS: '/admin/groups',
-    GROUP_BY_ID: (id: number) => `/admin/groups/${id}`,
-    MESSAGES: '/admin/messages',
-    MESSAGE_BY_ID: (id: number) => `/admin/messages/${id}`,
-    ANALYTICS: '/admin/analytics',
-    METRICS: '/admin/metrics',
-    DASHBOARD_STATS: '/admin/dashboard-stats',
-    RECENT_ALERTS: '/admin/alerts/recent',
+    LOAN: {
+      ALL: '/admin/loans'
+    },
+    PROJECT: {
+      ALL: '/admin/projects'
+    },
+    USER: {
+      ALL: '/admin/users'
+    }
   },
 };
 

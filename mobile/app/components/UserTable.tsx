@@ -1,13 +1,8 @@
+import { User } from '@/types';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
-type User = {
-    name: string;
-    email: string;
-    phone: string;
-    farmType: string;
-    status: 'Active' | 'Inactive';
-};
+
 
 type UserTableProps = {
     users: User[];
@@ -40,10 +35,10 @@ export default function UserTable({ users, onView, onEdit, onDelete, page, rowsP
                     {/* Table Rows */}
                     {pagedUsers.map((user: User, idx: number) => (
                         <View key={user.email} className="flex-row border-b border-gray-100 items-center">
-                            <Text className="w-36 px-2 py-2 text-gray-800" numberOfLines={1}>{user.name}</Text>
+                            <Text className="w-36 px-2 py-2 text-gray-800" numberOfLines={1}>{user.firstName}</Text>
+                            <Text className="w-36 px-2 py-2 text-gray-800" numberOfLines={1}>{user.lastName}</Text>
                             <Text className="w-48 px-2 py-2 text-gray-800" numberOfLines={1}>{user.email}</Text>
-                            <Text className="w-36 px-2 py-2 text-gray-800" numberOfLines={1}>{user.phone}</Text>
-                            <Text className="w-36 px-2 py-2 text-gray-800" numberOfLines={1}>{user.farmType}</Text>
+                            
                             <View className="w-24 px-2 py-2 flex-row justify-center">
                                 {user.status === 'Active' ? (
                                     <Text className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">Active</Text>

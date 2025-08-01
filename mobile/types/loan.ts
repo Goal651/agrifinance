@@ -25,7 +25,7 @@ export interface Loan {
         financial: FinancialInfo
         documents: DocumentUpload
     }
-    createdAt: Date
+    createdAt: string
     updatedAt: Date
 }
 

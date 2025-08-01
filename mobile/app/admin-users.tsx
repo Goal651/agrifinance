@@ -1,28 +1,13 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Modal, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import UserTable from './components/UserTable';
+import { useAdmin } from '@/hooks/useAdmin';
+import { User } from '@/types';
 
-type User = {
-    name: string;
-    email: string;
-    phone: string;
-    farmType: string;
-    status: 'Active' | 'Inactive';
-};
-
-const initialUsers: User[] = [
-    { name: 'Emily Davis', email: 'emily@example.com', phone: '+1555666777', farmType: 'Poultry', status: 'Active' },
-    { name: 'Jane Smith', email: 'jane@example.com', phone: '+1987654321', farmType: 'Livestock', status: 'Active' },
-    { name: 'John Doe', email: 'john@example.com', phone: '+1234567890', farmType: 'Crop Farming', status: 'Active' },
-    { name: 'Michael Wilson', email: 'michael@example.com', phone: '+1777888999', farmType: 'Dairy Farming', status: 'Active' },
-    { name: 'Robert Johnson', email: 'robert@example.com', phone: '+1122334455', farmType: 'Mixed Farming', status: 'Inactive' },
-];
 
 export default function AdminUsers() {
-    const router = useRouter();
-    const [users, setUsers] = useState(initialUsers);
+    const { users } = useAdmin()
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState('all');
     const [page, setPage] = useState(1);
@@ -44,9 +29,10 @@ export default function AdminUsers() {
 
     const filteredUsers = users.filter(u => {
         const matchesSearch =
-            u.name.toLowerCase().includes(search.toLowerCase()) ||
-            u.email.toLowerCase().includes(search.toLowerCase()) ||
-            u.phone.includes(search);
+            u.firstName.toLowerCase().includes(search.toLowerCase()) ||
+            u.lastName.toLowerCase().includes(search.toLowerCase()) ||
+            u.email.toLowerCase().includes(search.toLowerCase())
+
         const matchesStatus =
             filter === 'all' ? true :
                 filter === 'active' ? u.status === 'Active' :
@@ -68,17 +54,17 @@ export default function AdminUsers() {
     };
     const handleDeleteConfirm = () => {
         if (deleteUser) {
-            setUsers(users.filter(u => u.email !== deleteUser.email));
+            // setUsers(users.filter(u => u.email !== deleteUser.email));
             setDeleteUser(null);
         }
     };
     const handleEditSave = (updated: User) => {
-        setUsers(users.map(u => u.email === updated.email ? updated : u));
+        // setUsers(users.map(u => u.email === updated.email ? updated : u));
         setModalUser(null);
         setModalMode(null);
     };
     const handleActivateToggle = (user: User) => {
-        setUsers(users.map(u => u.email === user.email ? { ...u, status: u.status === 'Active' ? 'Inactive' : 'Active' } : u));
+        // setUsers(users.map(u => u.email === user.email ? { ...u, status: u.status === 'Active' ? 'Inactive' : 'Active' } : u));
     };
 
     const handleAddUser = () => {
@@ -86,16 +72,7 @@ export default function AdminUsers() {
             setAddError('Please fill all required fields');
             return;
         }
-        setUsers([
-            ...users,
-            {
-                name: addName,
-                email: addEmail,
-                phone: addPhone,
-                farmType: addFarmType,
-                status: 'Active',
-            },
-        ]);
+
         setShowAddModal(false);
         setAddName(''); setAddEmail(''); setAddPhone(''); setAddAddress(''); setAddFarmType(''); setAddError('');
     };
@@ -106,9 +83,8 @@ export default function AdminUsers() {
     const [editFarmType, setEditFarmType] = useState('');
     useEffect(() => {
         if (modalMode === 'edit' && modalUser) {
-            setEditName(modalUser.name);
-            setEditPhone(modalUser.phone);
-            setEditFarmType(modalUser.farmType);
+            setEditName(modalUser.firstName);
+
         }
     }, [modalMode, modalUser]);
 
@@ -206,19 +182,17 @@ export default function AdminUsers() {
                                     <TouchableOpacity className="flex-1 bg-gray-200 rounded-full py-3 mr-2" onPress={() => { setModalUser(null); setModalMode(null); }}>
                                         <Text className="text-gray-700 text-center font-semibold text-base">Cancel</Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity className="flex-1 bg-green-700 rounded-full py-3 ml-2" onPress={() => handleEditSave({ ...modalUser!, name: editName, phone: editPhone, farmType: editFarmType })}>
+                                    <TouchableOpacity className="flex-1 bg-green-700 rounded-full py-3 ml-2" onPress={() => handleEditSave({ ...modalUser!, firstName: editName })}>
                                         <Text className="text-white text-center font-semibold text-base">Save</Text>
                                     </TouchableOpacity>
                                 </View>
                             </>
                         ) : (
                             <>
-                                <Text className="font-semibold mb-1">Name</Text>
-                                <Text className="mb-2 text-center">{modalUser?.name}</Text>
-                                <Text className="font-semibold mb-1">Phone</Text>
-                                <Text className="mb-2 text-center">{modalUser?.phone}</Text>
-                                <Text className="font-semibold mb-1">Farm Type</Text>
-                                <Text className="mb-2 text-center">{modalUser?.farmType}</Text>
+                                <Text className="font-semibold mb-1">First Name</Text>
+                                <Text className="mb-2 text-center">{modalUser?.firstName}</Text>
+                                <Text className="font-semibold mb-1">Last Name</Text>
+                                <Text className="mb-2 text-center">{modalUser?.lastName}</Text>
                                 <View className="flex-row justify-between mt-4 w-full">
                                     <TouchableOpacity className="flex-1 bg-gray-200 rounded-full py-3 mr-2" onPress={() => setModalUser(null)}>
                                         <Text className="text-gray-700 text-center font-semibold text-base">Close</Text>
@@ -240,7 +214,7 @@ export default function AdminUsers() {
                 <View className="flex-1 justify-center items-center bg-black/40">
                     <View className="bg-white rounded-xl p-6 w-11/12 max-w-md items-center">
                         <Text className="text-lg font-bold mb-2 text-red-700 text-center">Delete User</Text>
-                        <Text className="mb-4 text-center">Are you sure you want to delete <Text className="font-bold">{deleteUser?.name}</Text>?</Text>
+                        <Text className="mb-4 text-center">Are you sure you want to delete <Text className="font-bold">{deleteUser?.firstName} {deleteUser?.lastName}</Text>?</Text>
                         <View className="flex-row justify-between mt-4 w-full">
                             <TouchableOpacity className="flex-1 bg-gray-200 rounded-full py-3 mr-2" onPress={() => setDeleteUser(null)}>
                                 <Text className="text-gray-700 text-center font-semibold text-base">Cancel</Text>

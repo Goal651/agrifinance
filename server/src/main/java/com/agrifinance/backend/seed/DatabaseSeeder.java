@@ -6,6 +6,7 @@ import com.agrifinance.backend.model.enums.LoanStatus;
 import com.agrifinance.backend.model.loan.*;
 import com.agrifinance.backend.model.loan.LoanInfo;
 import com.agrifinance.backend.model.enums.LoanTermType;
+import com.agrifinance.backend.model.enums.ProjectStatus;
 import com.agrifinance.backend.model.project.Project;
 import com.agrifinance.backend.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -174,8 +175,9 @@ public class DatabaseSeeder {
                                                 .user(users.get(1))
                                                 .name("Maize Expansion")
                                                 .description("Expanding maize farm by 5 acres.")
-                                                .status("ACTIVE")
-                                                .type("CROP")
+                                                .status(ProjectStatus.NOT_STARTED)
+                                                .targetDate(java.time.LocalDateTime.now().plusMonths(6))
+                                                .completedAt(null)
                                                 .createdAt(java.time.LocalDateTime.now().minusMonths(4))
                                                 .updatedAt(java.time.LocalDateTime.now().minusMonths(1))
                                                 .build();
@@ -183,8 +185,9 @@ public class DatabaseSeeder {
                                                 .user(users.get(1))
                                                 .name("Dairy Upgrade")
                                                 .description("Upgrade dairy facilities for higher yield.")
-                                                .status("PENDING")
-                                                .type("LIVESTOCK")
+                                                .status(ProjectStatus.COMPLETED)
+                                                .targetDate(null)
+                                                .completedAt(java.time.LocalDateTime.now().minusMonths(1))
                                                 .createdAt(java.time.LocalDateTime.now().minusMonths(1))
                                                 .updatedAt(java.time.LocalDateTime.now())
                                                 .build();

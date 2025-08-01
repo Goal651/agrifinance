@@ -2,7 +2,6 @@ package com.agrifinance.backend.controller.project;
 
 import com.agrifinance.backend.dto.common.ApiResponse;
 import com.agrifinance.backend.dto.project.ProjectDTO;
-import com.agrifinance.backend.dto.project.ProjectGoalDTO;
 import com.agrifinance.backend.security.jwt.JwtUtil;
 import com.agrifinance.backend.service.project.ProjectService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -45,14 +44,6 @@ public class ProjectController {
         return ResponseEntity.ok(new ApiResponse<>(true, data, "Projects fetched successfully"));
     }
 
-    @GetMapping("/goals")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponse<List<ProjectGoalDTO>>> getGoals(HttpServletRequest request,
-        @RequestParam(required = false) String status,
-        @RequestParam(required = false) String priority) {
-        List<ProjectGoalDTO> data = projectService.getProjectGoals(getUserId(request), status, priority);
-        return ResponseEntity.ok(new ApiResponse<>(true, data, "Project goals fetched successfully"));
-    }
 
     @GetMapping("/analytics")
     @PreAuthorize("hasRole('USER')")

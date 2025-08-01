@@ -9,6 +9,8 @@ import com.agrifinance.backend.repository.LoanRepository;
 import com.agrifinance.backend.repository.UserRepository;
 import jakarta.persistence.criteria.*;
 import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,34 +22,27 @@ import java.util.*;
 
 @Service
 public class LoanService {
-    private final LoanRepository loanRepository;
-    private final UserRepository userRepository;
-    private final LoanMapper loanMapper;
-    private final FinancialInfoMapper financialInfoMapper;
-    private final DocumentUploadMapper documentUploadMapper;
-    private final PersonalInfoMapper personalInfoMapper;
-    private final LoanProductMapper loanProductMapper;
-    private final LoanPaymentMapper loanPaymentMapper;
+    @Autowired
+    private LoanRepository loanRepository;
 
-    public LoanService(LoanRepository loanRepository, UserRepository userRepository, LoanMapper loanMapper,
-            FinancialInfoMapper financialInfoMapper, DocumentUploadMapper documentUploadMapper,
-            PersonalInfoMapper personalInfoMapper, LoanProductMapper loanProductMapper,
-            LoanPaymentMapper loanPaymentMapper) {
-        this.loanRepository = loanRepository;
-        this.userRepository = userRepository;
-        this.loanMapper = loanMapper;
-        this.financialInfoMapper = financialInfoMapper;
-        this.documentUploadMapper = documentUploadMapper;
-        this.personalInfoMapper = personalInfoMapper;
-        this.loanProductMapper = loanProductMapper;
-        this.loanPaymentMapper = loanPaymentMapper;
-    }
+    @Autowired
+    private UserRepository userRepository;
 
-    // User Endpoints
-    public LoanDTO getLoanOverview(UUID userId) {
-        List<Loan> loans = loanRepository.findByUserId(userId);
-        return loans.isEmpty() ? null : loanMapper.toDTO(loans.get(loans.size() - 1));
-    }
+    @Autowired
+    private LoanMapper loanMapper;
+
+    @Autowired
+    private FinancialInfoMapper financialInfoMapper;
+
+    @Autowired
+    private DocumentUploadMapper documentUploadMapper;
+
+    @Autowired
+    private PersonalInfoMapper personalInfoMapper;
+
+    @Autowired
+    private LoanProductMapper loanProductMapper;
+
 
     public LoanDTO getCurrentLoan(UUID userId) {
         List<Loan> loans = loanRepository.findByUserId(userId);
@@ -63,6 +58,7 @@ public class LoanService {
     public List<LoanDTO> getLoanHistory(UUID userId) {
         return loanMapper.toDTOs(loanRepository.findByUserId(userId));
     }
+    
 
     public Map<String, Object> getLoanAnalytics(UUID userId) {
         List<Loan> loans = loanRepository.findByUserId(userId);
@@ -198,7 +194,7 @@ public class LoanService {
     }
 
     public LoanDTO applyForLoan(UUID userId, LoanRequest request) {
-        System.out.println("user id"+request.getDetails());
+        System.out.println("user id" + request.getDetails());
         User user = userRepository.findById(userId).orElseThrow();
 
         // Create LoanDetails

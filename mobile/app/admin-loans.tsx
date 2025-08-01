@@ -1,17 +1,10 @@
+import { useAdmin } from '@/hooks/useAdmin';
+import { Loan } from '@/types';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-type Loan = {
-    id: number;
-    applicant: string;
-    loanType: string;
-    amount: number;
-    term: number;
-    status: 'Approved' | 'Pending' | 'Under Review' | 'Rejected';
-    date: string;
-};
 
 type LoanSummaryProps = {
     totalLoans: number;
@@ -22,6 +15,7 @@ type LoanSummaryProps = {
 
 // Loan summary and status bar component
 function LoanSummary({ totalLoans, totalAmount, approvedAmount, statusCounts }: LoanSummaryProps) {
+
     return (
         <View className="bg-[#faf9fd] border border-gray-200 rounded-2xl shadow-sm p-5 mb-4">
             <View className="flex-row justify-between mb-2">
@@ -73,6 +67,7 @@ type LoanTableProps = {
 
 // Loan table component
 function LoanTable({ loans, page, rowsPerPage, setPage, setRowsPerPage }: LoanTableProps) {
+    console.log('loans \n',loans)
     const totalPages = Math.ceil(loans.length / rowsPerPage);
     const pagedLoans = loans.slice((page - 1) * rowsPerPage, page * rowsPerPage);
     return (
@@ -90,17 +85,16 @@ function LoanTable({ loans, page, rowsPerPage, setPage, setRowsPerPage }: LoanTa
                     </View>
                     {pagedLoans.map((loan: Loan, idx: number) => (
                         <View key={loan.id} className="flex-row border-b border-gray-100 items-center">
-                            <Text className="w-40 px-2 py-2 text-gray-800" numberOfLines={1}>{loan.applicant}</Text>
-                            <Text className="w-48 px-2 py-2 text-gray-800" numberOfLines={1}>{loan.loanType}</Text>
-                            <Text className="w-32 px-2 py-2 text-gray-800">${loan.amount.toLocaleString()}</Text>
-                            <Text className="w-24 px-2 py-2 text-gray-800">{loan.term}</Text>
+                            <Text className="w-40 px-2 py-2 text-gray-800" numberOfLines={1}>{loan.details.name}</Text>
+                            <Text className="w-48 px-2 py-2 text-gray-800" numberOfLines={1}>{loan.details.description}</Text>
+                            <Text className="w-32 px-2 py-2 text-gray-800">${loan.details.amount.toLocaleString()}</Text>
+                            <Text className="w-24 px-2 py-2 text-gray-800">{loan.details.term}</Text>
                             <View className="w-32 px-2 py-2 flex-row items-center">
-                                {loan.status === 'Approved' && <Text className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">Approved</Text>}
-                                {loan.status === 'Pending' && <Text className="bg-yellow-400 text-white px-3 py-1 rounded-full text-xs font-semibold">Pending</Text>}
-                                {loan.status === 'Under Review' && <Text className="bg-yellow-300 text-white px-3 py-1 rounded-full text-xs font-semibold">Under Review</Text>}
-                                {loan.status === 'Rejected' && <Text className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold">Rejected</Text>}
+                                {loan.status === 'APPROVED' && <Text className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">Approved</Text>}
+                                {loan.status === 'PENDING' && <Text className="bg-yellow-400 text-white px-3 py-1 rounded-full text-xs font-semibold">Pending</Text>}
+                                {loan.status === 'REJECTED' && <Text className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold">Rejected</Text>}
                             </View>
-                            <Text className="w-32 px-2 py-2 text-gray-800">{loan.date}</Text>
+                            <Text className="w-32 px-2 py-2 text-gray-800">{new Date(loan.createdAt).toLocaleDateString()}</Text>
                             <View className="w-32 px-2 py-2 flex-row justify-center space-x-2">
                                 <TouchableOpacity>
                                     <MaterialIcons name="visibility" size={20} color="#2563eb" />
@@ -133,43 +127,23 @@ function LoanTable({ loans, page, rowsPerPage, setPage, setRowsPerPage }: LoanTa
     );
 }
 
-const initialLoans: Loan[] = [
-    { id: 1, applicant: 'Michael Wilson', loanType: 'Agricultural Processing', amount: 35000, term: 48, status: 'Under Review', date: '2023-07-12' },
-    { id: 2, applicant: 'Jane Smith', loanType: 'Seasonal Crop', amount: 25000, term: 12, status: 'Pending', date: '2023-07-10' },
-    { id: 3, applicant: 'Robert Johnson', loanType: 'Livestock Purchase', amount: 10000, term: 36, status: 'Rejected', date: '2023-07-05' },
-    { id: 4, applicant: 'John Doe', loanType: 'Farming Equipment', amount: 15000, term: 24, status: 'Approved', date: '2023-05-20' },
-    { id: 5, applicant: 'Emily Davis', loanType: 'Farm Expansion', amount: 50000, term: 60, status: 'Approved', date: '2023-03-15' },
-];
 
 export default function AdminLoans() {
-    const [loans, setLoans] = useState(initialLoans);
+    const { loans } = useAdmin()
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState('All');
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const router = useRouter();
 
-    const filteredLoans = loans.filter(l => {
-        const matchesSearch =
-            l.applicant.toLowerCase().includes(search.toLowerCase()) ||
-            l.loanType.toLowerCase().includes(search.toLowerCase());
-        const matchesStatus =
-            filter === 'All' ? true :
-                filter === 'Pending' ? l.status === 'Pending' || l.status === 'Under Review' :
-                    filter === 'Approved' ? l.status === 'Approved' :
-                        filter === 'Rejected' ? l.status === 'Rejected' : true;
-        return matchesSearch && matchesStatus;
-    });
-
     // Calculate summary
     const totalLoans = loans.length;
-    const totalAmount = loans.reduce((sum, l) => sum + l.amount, 0);
-    const approvedAmount = loans.filter(l => l.status === 'Approved').reduce((sum, l) => sum + l.amount, 0);
+    const totalAmount = loans.reduce((sum, l) => sum + l.details.amount, 0);
+    const approvedAmount = loans.filter(l => l.status === 'APPROVED').reduce((sum, l) => sum + l.details.amount, 0);
     const statusCounts = {
-        Approved: loans.filter(l => l.status === 'Approved').length,
-        Pending: loans.filter(l => l.status === 'Pending').length,
-        'Under Review': loans.filter(l => l.status === 'Under Review').length,
-        Rejected: loans.filter(l => l.status === 'Rejected').length,
+        Approved: loans.filter(l => l.status === 'APPROVED').length,
+        Pending: loans.filter(l => l.status === 'PENDING').length,
+        Rejected: loans.filter(l => l.status === 'REJECTED').length,
     };
 
     return (
@@ -208,7 +182,7 @@ export default function AdminLoans() {
             </View>
             <View className="flex-1 px-2">
                 <LoanTable
-                    loans={filteredLoans}
+                    loans={loans}
                     page={page}
                     rowsPerPage={rowsPerPage}
                     setPage={setPage}

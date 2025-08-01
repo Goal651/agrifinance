@@ -1,9 +1,9 @@
 package com.agrifinance.backend.service.project;
 
 import com.agrifinance.backend.dto.project.ProjectDTO;
-import com.agrifinance.backend.dto.project.ProjectGoalDTO;
+import com.agrifinance.backend.mapper.project.ProjectMapper;
+import com.agrifinance.backend.model.enums.ProjectStatus;
 import com.agrifinance.backend.model.project.Project;
-import com.agrifinance.backend.model.project.ProjectGoal;
 import com.agrifinance.backend.model.user.User;
 import com.agrifinance.backend.repository.ProjectRepository;
 import com.agrifinance.backend.repository.UserRepository;
@@ -21,81 +21,29 @@ import java.util.*;
 public class ProjectService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final ProjectMapper projectMapper;
 
-    public ProjectService(ProjectRepository projectRepository, UserRepository userRepository) {
+    public ProjectService(ProjectRepository projectRepository, UserRepository userRepository, ProjectMapper projectMapper) {
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
+        this.projectMapper = projectMapper;
     }
 
-    // Manual mapping methods
-    private ProjectDTO toDto(Project project) {
-        if (project == null) return null;
-        ProjectDTO dto = new ProjectDTO();
-        dto.setId(project.getId() != null ? project.getId().toString() : null);
-        dto.setUserId(project.getUser() != null ? project.getUser().getId().toString() : null);
-        dto.setName(project.getName());
-        dto.setDescription(project.getDescription());
-        dto.setStatus(project.getStatus());
-        dto.setType(project.getType());
-        dto.setCreatedAt(project.getCreatedAt());
-        dto.setUpdatedAt(project.getUpdatedAt());
-        if (project.getGoals() != null) {
-            dto.setGoals(project.getGoals().stream().map(this::toDto).toList());
-        }
-        return dto;
-    }
-    public List<ProjectDTO> toDtoList(List<Project> projects) {
-        return projects.stream().map(this::toDto).toList();
-    }
-
-    private Project toEntity(ProjectDTO dto) {
-        if (dto == null) return null;
-        Project project = new Project();
-        if (dto.getId() != null) project.setId(UUID.fromString(dto.getId()));
-        project.setName(dto.getName());
-        project.setDescription(dto.getDescription());
-        project.setStatus(dto.getStatus());
-        project.setType(dto.getType());
-        project.setCreatedAt(dto.getCreatedAt());
-        project.setUpdatedAt(dto.getUpdatedAt());
-        // user and goals set elsewhere
-        return project;
-    }
-    private ProjectGoalDTO toDto(ProjectGoal goal) {
-        if (goal == null) return null;
-        ProjectGoalDTO dto = new ProjectGoalDTO();
-        dto.setId(goal.getId() != null ? goal.getId().toString() : null);
-        dto.setName(goal.getName());
-        dto.setDescription(goal.getDescription());
-        dto.setStatus(goal.getStatus());
-        dto.setPriority(goal.getPriority());
-        return dto;
-    }
-    private List<ProjectGoalDTO> toDtoListGoals(List<ProjectGoal> goals) {
-        return goals.stream().map(this::toDto).toList();
-    }
 
     // User Endpoints
     public ProjectDTO getProjectOverview(UUID userId) {
         List<Project> projects = projectRepository.findByUserId(userId);
-        return projects.isEmpty() ? null : toDto(projects.get(projects.size() - 1));
+        return projects.isEmpty() ? null : projectMapper.toDTO(projects.get(projects.size() - 1));
     }
     public List<ProjectDTO> getProjects(UUID userId, String status, String search) {
         List<Project> projects = projectRepository.findByUserId(userId);
         return projects.stream()
                 .filter(p -> status == null || status.equals(p.getStatus()))
                 .filter(p -> search == null || p.getName().toLowerCase().contains(search.toLowerCase()))
-                .map(this::toDto)
+                .map(projectMapper::toDTO)
                 .toList();
     }
-    public List<ProjectGoalDTO> getProjectGoals(UUID userId, String status, String priority) {
-        List<Project> projects = projectRepository.findByUserId(userId);
-        List<ProjectGoal> goals = projects.stream()
-                .flatMap(p -> p.getGoals().stream())
-                .filter(g -> (status == null || status.equals(g.getStatus())) && (priority == null || priority.equals(g.getPriority())))
-                .toList();
-        return toDtoListGoals(goals);
-    }
+
     public Map<String, Object> getProjectAnalytics(UUID userId) {
         List<Project> projects = projectRepository.findByUserId(userId);
         long active = projects.stream().filter(p -> "ACTIVE".equals(p.getStatus())).count();
@@ -108,14 +56,14 @@ public class ProjectService {
     }
     public ProjectDTO createProject(UUID userId, ProjectDTO dto) {
         User user = userRepository.findById(userId).orElseThrow();
-        Project project = toEntity(dto);
+        Project project = projectMapper.toEntity(dto);
         project.setId(null);
         project.setUser(user);
-        project.setStatus("ACTIVE");
+        project.setStatus(ProjectStatus.NOT_STARTED);
         project.setCreatedAt(LocalDateTime.now());
         project.setUpdatedAt(LocalDateTime.now());
         project = projectRepository.save(project);
-        return toDto(project);
+        return projectMapper.toDTO(project);
     }
     // Admin Endpoints
     public Page<ProjectDTO> getAllProjects(int page, int limit, String projectType, UUID userId, String status) {
@@ -127,25 +75,24 @@ public class ProjectService {
             if (status != null) predicates.add(cb.equal(root.get("status"), status));
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-        return projectRepository.findAll(spec, pageable).map(this::toDto);
+        return projectRepository.findAll(spec, pageable).map(projectMapper::toDTO);
     }
     public ProjectDTO getProjectById(UUID projectId) {
-        return toDto(projectRepository.findById(projectId).orElseThrow());
+        return projectMapper.toDTO(projectRepository.findById(projectId).orElseThrow());
     }
     public ProjectDTO getProjectById(UUID userId, String id) {
         Project project = projectRepository.findById(UUID.fromString(id)).orElseThrow();
         if (!project.getUser().getId().equals(userId)) {
             throw new RuntimeException("Unauthorized access to project");
         }
-        return toDto(project);
+        return projectMapper.toDTO(project);
     }
     public ProjectDTO updateProject(UUID projectId, ProjectDTO dto) {
         Project project = projectRepository.findById(projectId).orElseThrow();
         project.setName(dto.getName());
         project.setDescription(dto.getDescription());
-        project.setType(dto.getType());
         project.setUpdatedAt(LocalDateTime.now());
-        return toDto(projectRepository.save(project));
+        return projectMapper.toDTO(projectRepository.save(project));
     }
     public ProjectDTO updateProject(UUID userId, String id, ProjectDTO dto) {
         Project project = projectRepository.findById(UUID.fromString(id)).orElseThrow();
@@ -154,16 +101,15 @@ public class ProjectService {
         }
         project.setName(dto.getName());
         project.setDescription(dto.getDescription());
-        project.setType(dto.getType());
         project.setStatus(dto.getStatus());
         project.setUpdatedAt(LocalDateTime.now());
-        return toDto(projectRepository.save(project));
+        return projectMapper.toDTO(projectRepository.save(project));
     }
-    public ProjectDTO updateProjectStatus(UUID projectId, String status) {
+    public ProjectDTO updateProjectStatus(UUID projectId, ProjectStatus status) {
         Project project = projectRepository.findById(projectId).orElseThrow();
         project.setStatus(status);
         project.setUpdatedAt(LocalDateTime.now());
-        return toDto(projectRepository.save(project));
+        return projectMapper.toDTO(projectRepository.save(project));
     }
     public void deleteProject(UUID userId, String id) {
         Project project = projectRepository.findById(UUID.fromString(id)).orElseThrow();

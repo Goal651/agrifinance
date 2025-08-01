@@ -1,19 +1,19 @@
 package com.agrifinance.backend.dto.project;
 
-import lombok.Data;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
-import com.agrifinance.backend.model.enums.GoalStatus;
+import com.agrifinance.backend.model.enums.TaskStatus;
+
+import lombok.Data;
 
 @Data
-public class ProjectGoalDTO {
+public class GoalTaskDTO {
     private UUID id;
-    private String name;
+    private String title;
     private String description;
-    private GoalStatus status;
-    private List<GoalTaskDTO> tasks;
+    private TaskStatus status = TaskStatus.NOT_STARTED; 
+    private Integer priority;
     private LocalDateTime dueDate;
     private LocalDateTime completedAt;
 }
