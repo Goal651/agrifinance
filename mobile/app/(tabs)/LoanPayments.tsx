@@ -9,7 +9,7 @@ export default function LoanPayments() {
   const paidAmount = currentLoan?.payments
     ? currentLoan.payments.filter(p => p.status === 'Paid').reduce((sum, p) => sum + p.amount, 0)
     : 0;
-  const totalLoanAmount = currentLoan?.amount || 0;
+  const totalLoanAmount = currentLoan?.details.amount || 0;
   const remaining = totalLoanAmount - paidAmount;
 
   return (

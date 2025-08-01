@@ -13,11 +13,10 @@ import lombok.NoArgsConstructor;
 @Builder
 public class FinancialInfo {
     private Double monthlyIncome;
-    private Double annualIncome;
-    private String incomeSource; // Consider creating an enum
-    private String employmentStatus; // Consider creating an enum
-    private Integer farmingExperience; // in years
-    private String farmType; // Consider creating an enum
+    private String incomeSource;
+    private String employmentStatus;
+    private Integer farmingExperience;
+    private String farmType;
     private String bankName;
     private String bankBranch;
     private String accountNumber;

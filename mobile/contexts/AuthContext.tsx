@@ -15,6 +15,7 @@ const AuthContext = createContext<AuthContextType>(null);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
     const [authToken, setAuthToken] = useState<string | null>(null);
+    const [role, setRole] = useState<string | null>(null);
     const auth = useAuth();
 
     useEffect(() => {
@@ -22,27 +23,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         AsyncStorage.getItem('auth_token')
             .then(token => {
                 console.log('AuthProvider: Token from storage:', token);
-                setAuthToken(token || null);
-                if (!token) router.push('/login');
+                setAuthToken(token || null)
             })
             .catch(error => {
                 console.error('AuthProvider: Error getting token:', error);
                 setAuthToken(null);
-                router.push('/login');
+            });
+        AsyncStorage.getItem('role')
+            .then(role => {
+                console.log('AuthProvider: Role from storage:', role);
+                setRole(role || null)
+            })
+            .catch(error => {
+                console.error('AuthProvider: Error getting role:', error);
+                setRole(null);
             });
     }, [router]);
 
 
-
-
-    // Update auth token when login is successful
-    useEffect(() => {
-        if (auth.loading === false && authToken === null) {
-            AsyncStorage.getItem('auth_token').then(token => {
-                setAuthToken(token || null);
-            });
-        }
-    }, [auth.loading, authToken, router]);
+useEffect(() => {
+    if (authToken) {
+        router.replace(role === 'ADMIN' ? '/admin-dashboard' : '/(tabs)');
+    }
+}, [authToken, router, role]);
 
     return (
         <AuthContext.Provider value={auth}>

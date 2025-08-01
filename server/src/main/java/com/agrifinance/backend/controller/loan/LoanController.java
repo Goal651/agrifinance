@@ -2,7 +2,6 @@ package com.agrifinance.backend.controller.loan;
 
 import com.agrifinance.backend.dto.common.ApiResponse;
 import com.agrifinance.backend.dto.loan.LoanDTO;
-import com.agrifinance.backend.dto.loan.LoanPaymentDTO;
 import com.agrifinance.backend.dto.loan.LoanRequest;
 import com.agrifinance.backend.service.loan.LoanService;
 import com.agrifinance.backend.security.jwt.JwtUtil;
@@ -37,12 +36,6 @@ public class LoanController {
         return ResponseEntity.ok(new ApiResponse<>(true, data, "Loan overview fetched successfully"));
     }
 
-    @GetMapping("/payments")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponse<List<LoanPaymentDTO>>> getPayments(HttpServletRequest request) {
-        List<LoanPaymentDTO> data = loanService.getLoanPayments(getUserId(request));
-        return ResponseEntity.ok(new ApiResponse<>(true, data, "Loan payments fetched successfully"));
-    }
 
     @GetMapping("/history")
     @PreAuthorize("hasRole('USER')")
@@ -61,7 +54,6 @@ public class LoanController {
     @PostMapping("/apply")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<LoanDTO>> apply(HttpServletRequest request, @RequestBody LoanRequest dto) {
-        System.out.println("Testing"+dto);
         LoanDTO data = loanService.applyForLoan(getUserId(request), dto);
         return ResponseEntity.ok(new ApiResponse<>(true, data, "Loan application submitted successfully"));
     }

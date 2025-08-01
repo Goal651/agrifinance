@@ -34,6 +34,14 @@ export function useAuth() {
                         console.error('Error storing token:', error);
                         throw new Error('Failed to store authentication token');
                     });
+                await AsyncStorage.setItem('role', response.data.role)
+                    .then(() => {
+                        console.log('Role stored successfully');
+                    })
+                    .catch(error => {
+                        console.error('Error storing role:', error);
+                        throw new Error('Failed to store user role');
+                    });
             } else {
                 console.error('Login failed:', response.message);
                 throw new Error(response.message);

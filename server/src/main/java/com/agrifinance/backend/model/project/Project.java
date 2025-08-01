@@ -3,7 +3,6 @@ package com.agrifinance.backend.model.project;
 import jakarta.persistence.*;
 import lombok.*;
 import com.agrifinance.backend.model.user.User;
-import com.agrifinance.backend.model.project.ProjectGoal;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,7 +16,7 @@ import java.util.UUID;
 @Table(indexes = @Index(name = "idx_project_user_id", columnList = "user_id"))
 public class Project {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.UUID)  
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)

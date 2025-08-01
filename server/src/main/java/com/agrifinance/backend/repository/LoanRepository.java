@@ -19,8 +19,8 @@ public interface LoanRepository extends JpaRepository<Loan, UUID>, JpaSpecificat
     @Query("SELECT l FROM Loan l WHERE l.user.id = :userId AND l.status = :status")
     List<Loan> findByUserIdAndStatus(@Param("userId") UUID userId, @Param("status") LoanStatus status);
     
-    @Query("SELECT l FROM Loan l WHERE l.details.type = :type")
-    Page<Loan> findByType(@Param("type") String type, Pageable pageable);
+    @Query("SELECT l FROM Loan l WHERE l.details.name = :name")
+    Page<Loan> findByName(@Param("name") String name, Pageable pageable);
     
     @Query("SELECT l FROM Loan l WHERE l.details.amount BETWEEN :minAmount AND :maxAmount")
     Page<Loan> findByAmountRange(
@@ -36,7 +36,7 @@ public interface LoanRepository extends JpaRepository<Loan, UUID>, JpaSpecificat
         @Param("endDate") LocalDateTime endDate
     );
     
-    @Query("SELECT COALESCE(SUM(l.details.amount), 0) FROM Loan l WHERE l.status = 'APPROVED'")
+    @Query("SELECT COALESCE(SUM(l.details.amount), 0) FROM Loan l WHERE l.status = com.agrifinance.backend.model.enums.LoanStatus.APPROVED")
     Double getTotalApprovedLoanAmount();
     
     @Query("SELECT COUNT(l) FROM Loan l WHERE l.status = :status")

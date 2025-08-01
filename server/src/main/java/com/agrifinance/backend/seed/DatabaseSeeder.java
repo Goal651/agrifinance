@@ -2,10 +2,8 @@ package com.agrifinance.backend.seed;
 
 import com.agrifinance.backend.model.user.User;
 import com.agrifinance.backend.model.user.Role;
-import com.agrifinance.backend.model.user.Address;
 import com.agrifinance.backend.model.enums.LoanStatus;
 import com.agrifinance.backend.model.loan.*;
-import com.agrifinance.backend.model.loan.LoanDetails;
 import com.agrifinance.backend.model.loan.LoanInfo;
 import com.agrifinance.backend.model.enums.LoanTermType;
 import com.agrifinance.backend.model.project.Project;
@@ -17,8 +15,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
-import java.util.UUID;
-import java.time.LocalDate;
 
 @Configuration
 @RequiredArgsConstructor
@@ -38,28 +34,16 @@ public class DatabaseSeeder {
                                                 .password(passwordEncoder.encode("admin123"))
                                                 .firstName("Admin")
                                                 .lastName("User")
-                                                .phone("1234567890")
-                                                .farmType("N/A")
-                                                .farmSize(0.0)
-                                                .location("HQ")
                                                 .role(Role.ADMIN)
                                                 .status("ACTIVE")
-                                                .address(Address.builder().street("1 Admin St").city("AgriCity")
-                                                                .state("AgriState").zipCode("00000").build())
                                                 .build();
                                 User user = User.builder()
                                                 .email("user@agrifinance.com")
                                                 .password(passwordEncoder.encode("user123"))
                                                 .firstName("John")
                                                 .lastName("Farmer")
-                                                .phone("0987654321")
-                                                .farmType("CROP")
-                                                .farmSize(10.5)
-                                                .location("Village")
                                                 .role(Role.USER)
                                                 .status("ACTIVE")
-                                                .address(Address.builder().street("2 Farm Rd").city("AgriTown")
-                                                                .state("AgriState").zipCode("11111").build())
                                                 .build();
                                 userRepository.saveAll(List.of(admin, user));
                         }
@@ -68,24 +52,26 @@ public class DatabaseSeeder {
                                 LoanProduct lp1 = LoanProduct.builder()
                                                 .name("Standard Crop Loan")
                                                 .description("Loan for crop farmers")
-                                                .interestRate(8.5)
-                                                .maxAmount(10000.0)
-                                                .minAmount(500.0)
-                                                .termMonths(12)
+                                                .interest(8.5)
+                                                .amount(10000.0)
+                                                .term(12)
+                                                .termType(LoanTermType.MONTHS)
                                                 .build();
                                 LoanProduct lp2 = LoanProduct.builder()
                                                 .name("Livestock Loan")
                                                 .description("Loan for livestock farmers")
-                                                .interestRate(10.0)
-                                                .maxAmount(20000.0)
-                                                .minAmount(1000.0)
-                                                .termMonths(24)
+                                                .interest(10.0)
+                                                .amount(20000.0)
+                                                .term(24)
+                                                .termType(LoanTermType.YEARS)
                                                 .build();
                                 loanProductRepository.saveAll(List.of(lp1, lp2));
                         }
 
                         List<User> users = userRepository.findAll();
                         List<LoanProduct> products = loanProductRepository.findAll();
+                        LoanProduct cropLoan = products.get(0);
+                        LoanProduct cattleLoan = products.size() > 1 ? products.get(1) : products.get(0);
 
                         if (loanRepository.count() == 0 && !users.isEmpty() && !products.isEmpty()) {
                                 User farmer = users.get(1);
@@ -94,14 +80,7 @@ public class DatabaseSeeder {
                                 Loan loan1 = Loan.builder()
                                                 .user(farmer)
                                                 .status(LoanStatus.PENDING)
-                                                .details(LoanDetails.builder()
-                                                                .amount(5000.0)
-                                                                .interest(8.5)
-                                                                .type("CROP")
-                                                                .term(12)
-                                                                .termType(LoanTermType.MONTHS)
-                                                                .purpose("Maize cultivation")
-                                                                .build())
+                                                .details(cropLoan)
                                                 .info(LoanInfo.builder()
                                                                 .personal(PersonalInfo.builder()
                                                                                 .firstName(farmer.getFirstName())
@@ -109,17 +88,10 @@ public class DatabaseSeeder {
                                                                                 .idNumber("ID12345678")
                                                                                 .dateOfBirth(java.time.LocalDate.now()
                                                                                                 .minusYears(35))
-                                                                                .streetAddress(farmer.getAddress()
-                                                                                                .getStreet())
-                                                                                .city(farmer.getAddress().getCity())
-                                                                                .state(farmer.getAddress().getState())
-                                                                                .postalCode(farmer.getAddress()
-                                                                                                .getZipCode())
-                                                                                .country("Kenya")
+
                                                                                 .build())
                                                                 .financial(FinancialInfo.builder()
                                                                                 .monthlyIncome(1500.0)
-                                                                                .annualIncome(18000.0)
                                                                                 .incomeSource("farming")
                                                                                 .employmentStatus("self-employed")
                                                                                 .farmingExperience(8)
@@ -151,14 +123,7 @@ public class DatabaseSeeder {
                                 Loan loan2 = Loan.builder()
                                                 .user(farmer)
                                                 .status(LoanStatus.PENDING)
-                                                .details(LoanDetails.builder()
-                                                                .amount(12000.0)
-                                                                .interest(10.0)
-                                                                .type("LIVESTOCK")
-                                                                .term(24)
-                                                                .termType(LoanTermType.MONTHS)
-                                                                .purpose("Dairy cattle purchase")
-                                                                .build())
+                                                .details(cattleLoan)
                                                 .info(LoanInfo.builder()
                                                                 .personal(PersonalInfo.builder()
                                                                                 .firstName(farmer.getFirstName())
@@ -166,17 +131,14 @@ public class DatabaseSeeder {
                                                                                 .idNumber("ID12345678")
                                                                                 .dateOfBirth(java.time.LocalDate.now()
                                                                                                 .minusYears(35))
-                                                                                .streetAddress(farmer.getAddress()
-                                                                                                .getStreet())
-                                                                                .city(farmer.getAddress().getCity())
-                                                                                .state(farmer.getAddress().getState())
-                                                                                .postalCode(farmer.getAddress()
-                                                                                                .getZipCode())
+                                                                                .streetAddress("8765432")
+                                                                                .city("Nairobi")
+                                                                                .state("Nairobi")
+                                                                                .postalCode("00100")
                                                                                 .country("Kenya")
                                                                                 .build())
                                                                 .financial(FinancialInfo.builder()
                                                                                 .monthlyIncome(2000.0)
-                                                                                .annualIncome(24000.0)
                                                                                 .incomeSource("farming")
                                                                                 .employmentStatus("self-employed")
                                                                                 .farmingExperience(10)

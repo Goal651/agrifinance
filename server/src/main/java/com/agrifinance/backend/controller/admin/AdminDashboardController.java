@@ -1,6 +1,5 @@
 package com.agrifinance.backend.controller.admin;
 
-import com.agrifinance.backend.dto.common.ApiResponse;
 import com.agrifinance.backend.service.loan.LoanService;
 import com.agrifinance.backend.service.project.ProjectService;
 import io.swagger.v3.oas.annotations.tags.Tag;

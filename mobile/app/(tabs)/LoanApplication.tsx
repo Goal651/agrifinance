@@ -1,4 +1,3 @@
-import { getLoanProducts } from '@/api/loan';
 import DocumentUploadField from '@/components/DocumentUploadField';
 import LoanCard from '@/components/LoanCard';
 import LoanInputField from '@/components/LoanInputField';
@@ -17,45 +16,19 @@ import {
   XMarkIcon
 } from 'react-native-heroicons/outline';
 import Toast from 'react-native-toast-message';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+
 
 export default function LoanApplication() {
-  // ===== HOOKS & ROUTING =====
   const params = useLocalSearchParams();
   const router = useRouter();
   const { applyLoan, loading } = useLoan();
-
-  // ===== STATE MANAGEMENT =====
   const [step, setStep] = useState(1);
-
-  // Fetch loan products from server
   const [loanProducts, setLoanProducts] = useState<LoanProduct[]>([]);
-  useEffect(() => {
-    getLoanProducts().then(setLoanProducts);
-  }, []);
-
-  // Parse product data from navigation params
-  const product = params.product ? JSON.parse(params.product as string) : null;
-
-  // ===== STEP 1: LOAN INFORMATION (Read-only from product) =====
-  const [loanType] = useState(product?.name || '');
-  const [amount] = useState(product?.minAmount?.toString() || '');
+  const product: LoanProduct = params.product ? JSON.parse(params.product as string) : null;
+  console.log(params)
   const [purpose, setPurpose] = useState('');
-  const [purposeError, setPurposeError] = useState('');
-  const [term] = useState(product?.termMonths?.toString() || '');
-  const [interestRate] = useState(product?.interest?.toString() || '');
-  const [monthlyPayment] = useState(() => {
-    if (product) {
-      const amt = Number(product.minAmount);
-      const rate = Number(product.interest);
-      const termValue = Number(product.termMonths);
-      if (amt && rate && termValue) {
-        return calculateMonthlyPayment(amt, rate, termValue).toFixed(2);
-      }
-    }
-    return '';
-  });
-
-  // ===== STEP 2: PERSONAL INFORMATION =====
+  const [showDobPicker, setShowDobPicker] = useState(false);
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     firstName: '',
     lastName: '',
@@ -91,12 +64,8 @@ export default function LoanApplication() {
     treeImages: []
   });
 
-  // ===== UTILITY DATA =====
-  const farmInfo = { size: '503', location: 'Kigali', existingLoans: 'No' };
 
-  // ===== UTILITY FUNCTIONS =====
-  
-  // Get loan purpose options based on loan type
+
   const getPurposeOptions = (loanType: string) => {
     switch (loanType.toLowerCase()) {
       case 'agricultural':
@@ -110,16 +79,6 @@ export default function LoanApplication() {
     }
   };
 
-  // ===== VALIDATION FUNCTIONS =====
-
-  const validateStep1 = () => {
-    if (!purpose) {
-      setPurposeError('Loan purpose is required');
-      return false;
-    }
-    setPurposeError('');
-    return true;
-  };
 
   const validateStep2 = () => {
     if (!personalInfo.firstName || !personalInfo.lastName || !personalInfo.idNumber || !personalInfo.dateOfBirth) {
@@ -145,9 +104,8 @@ export default function LoanApplication() {
     return true;
   };
 
-  // ===== IMAGE HANDLING FUNCTIONS =====
-
   const pickImage = async (type: keyof DocumentUpload) => {
+    console.log(type)
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -181,23 +139,17 @@ export default function LoanApplication() {
     }));
   };
 
-  // ===== SUBMISSION FUNCTION =====
-
   const handleSubmit = async () => {
-    if (!amount || !purpose || !term || !interestRate) return;
-    
+    if (!purpose || !product || !personalInfo || !financialInfo || !documents) return;
+
     const loanRequest: LoanRequest = {
-      amount: Number(amount),
-      type: loanType,
-      interest: Number(interestRate),
-      term: Number(term),
       purpose,
-      termType: Number(term) >= 12 ? 'years' : 'months',
+      details: product,
       personalInfo,
       financialInfo,
       documents
     };
-    
+
     await applyLoan(loanRequest);
   };
 
@@ -219,40 +171,40 @@ export default function LoanApplication() {
         <LoanInputField
           label="Loan Type"
           placeholder=""
-          value={loanType}
-          onChangeText={() => {}}
+          value={product.name}
+          onChangeText={() => { }}
           icon="account-balance-wallet"
           readOnly={true}
         />
         <LoanInputField
           label="Loan Amount"
           placeholder=""
-          value={`$${Number(amount).toLocaleString()}`}
-          onChangeText={() => {}}
+          value={`$${Number(product.amount).toLocaleString()}`}
+          onChangeText={() => { }}
           icon="attach-money"
           readOnly={true}
         />
         <LoanInputField
           label="Interest Rate"
           placeholder=""
-          value={`${interestRate}%`}
-          onChangeText={() => {}}
+          value={`${product.interest}%`}
+          onChangeText={() => { }}
           icon="percent"
           readOnly={true}
         />
         <LoanInputField
           label="Loan Term"
           placeholder=""
-          value={Number(term) >= 12 ? `${Math.round(Number(term) / 12)} years` : `${term} months`}
-          onChangeText={() => {}}
+          value={`${product.termType==='YEARS'?Number(product.term/12):product.term} ${product.termType}`}
+          onChangeText={() => { }}
           icon="schedule"
           readOnly={true}
         />
         <LoanInputField
           label="Monthly Payment"
           placeholder=""
-          value={`$${Number(monthlyPayment).toLocaleString()}`}
-          onChangeText={() => {}}
+          value={`$${Number(calculateMonthlyPayment(product.amount, product.interest, product.term)).toLocaleString()}`}
+          onChangeText={() => { }}
           icon="payment"
           readOnly={true}
         />
@@ -269,18 +221,13 @@ export default function LoanApplication() {
           multiline={true}
           numberOfLines={4}
         />
-        
-        {purposeError && (
-          <View className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
-            <Text className="text-red-600 text-base">{purposeError}</Text>
-      </View>
-        )}
+
       </LoanCard>
 
       <LoanNavigationButtons
         onBack={() => router.back()}
         onNext={() => {
-        if (validateStep1()) setStep(2);
+           setStep(2);
         }}
         nextText="Continue to Personal Information"
         showBack={false}
@@ -308,7 +255,7 @@ export default function LoanApplication() {
           onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, firstName: text }))}
           icon="person"
         />
-        
+
         <LoanInputField
           label="Last Name"
           placeholder="Enter last name"
@@ -325,13 +272,32 @@ export default function LoanApplication() {
           icon="badge"
         />
 
-        <LoanInputField
-          label="Date of Birth"
-          placeholder="YYYY-MM-DD"
-          value={personalInfo.dateOfBirth}
-          onChangeText={(text) => setPersonalInfo(prev => ({ ...prev, dateOfBirth: text }))}
-          icon="event"
-        />
+        {/* Date of Birth */}
+        <View className="mb-4">
+          <Text className="text-gray-700 mb-2 font-medium">Date of Birth</Text>
+          <TouchableOpacity
+            className="border border-gray-300 rounded-md p-4"
+            onPress={() => setShowDobPicker(true)}
+          >
+            <Text className={personalInfo.dateOfBirth ? 'text-black' : 'text-gray-400'}>
+              {personalInfo.dateOfBirth || 'Tap to choose'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        {showDobPicker && (
+          <DateTimePicker
+            value={personalInfo.dateOfBirth ? new Date(personalInfo.dateOfBirth) : new Date()}
+            mode="date"
+            maximumDate={new Date()}
+            onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
+              setShowDobPicker(false);
+              if (event.type === 'set' && selectedDate) {
+                const iso = selectedDate.toISOString().split('T')[0];
+                setPersonalInfo(prev => ({ ...prev, dateOfBirth: iso }));
+              }
+            }}
+          />
+        )}
 
         <LoanInputField
           label="Street Address"
@@ -400,17 +366,11 @@ export default function LoanApplication() {
           label="Monthly Income"
           placeholder="Enter monthly income"
           value={financialInfo.monthlyIncome.toString()}
-          onChangeText={(text) => setFinancialInfo(prev => ({ ...prev, monthlyIncome: Number(text) || 0 }))}
+          onChangeText={(text) => {
+            const monthly = Number(text) || 0;
+            setFinancialInfo(prev => ({ ...prev, monthlyIncome: monthly, annualIncome: monthly * 12 }));
+          }}
           icon="attach-money"
-          keyboardType="numeric"
-        />
-
-        <LoanInputField
-          label="Annual Income"
-          placeholder="Enter annual income"
-          value={financialInfo.annualIncome.toString()}
-          onChangeText={(text) => setFinancialInfo(prev => ({ ...prev, annualIncome: Number(text) || 0 }))}
-          icon="account-balance-wallet"
           keyboardType="numeric"
         />
 
@@ -506,6 +466,14 @@ export default function LoanApplication() {
       />
 
       <LoanCard title="Required Documents">
+      <DocumentUploadField
+          label="ID Photo"
+          icon="receipt"
+            onPress={() => pickImage('idPhoto')}
+            value={documents.idPhoto}
+          placeholder="Upload ID photo"
+          required={true}
+        />
         <DocumentUploadField
           label="Proof of Income"
           icon="receipt"
@@ -539,7 +507,7 @@ export default function LoanApplication() {
           <Text className="font-semibold text-gray-700 mb-3 text-base">
             Tree Images (Max 15)
           </Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => pickImage('treeImages')}
             className="border border-gray-200 rounded-2xl px-5 py-4 bg-white"
           >
@@ -552,7 +520,7 @@ export default function LoanApplication() {
             </View>
           </TouchableOpacity>
         </View>
-        
+
         {/* Display uploaded tree images */}
         {documents.treeImages.length > 0 && (
           <View className="flex-row flex-wrap">
@@ -562,7 +530,7 @@ export default function LoanApplication() {
                   source={{ uri: image }}
                   className="w-24 h-24 rounded-xl"
                 />
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => removeTreeImage(index)}
                   className="absolute -top-2 -right-2 bg-red-500 rounded-full w-7 h-7 items-center justify-center"
                 >
@@ -599,40 +567,40 @@ export default function LoanApplication() {
         <LoanInputField
           label="Loan Term"
           placeholder=""
-          value={Number(term) >= 12 ? `${Math.round(Number(term) / 12)} years` : `${term} months`}
-          onChangeText={() => {}}
+          value={Number(product.term) >= 12 ? `${Math.round(Number(product.term) / 12)} years` : `${product.term} months`}
+          onChangeText={() => { }}
           icon="schedule"
           readOnly={true}
         />
         <LoanInputField
           label="Interest Rate"
           placeholder=""
-          value={`${interestRate}%`}
-          onChangeText={() => {}}
+          value={`${product.interest}%`}
+          onChangeText={() => { }}
           icon="percent"
           readOnly={true}
         />
         <LoanInputField
           label="Monthly Payment"
           placeholder=""
-          value={`$${Number(monthlyPayment).toLocaleString()}`}
-          onChangeText={() => {}}
+          value={`$${Number(calculateMonthlyPayment(product.amount, product.interest, product.term)).toLocaleString()}`}
+          onChangeText={() => { }}
           icon="payment"
           readOnly={true}
         />
         <LoanInputField
           label="Total Interest"
           placeholder=""
-          value={`$${((Number(monthlyPayment) * Number(term)) - Number(amount)).toFixed(2)}`}
-          onChangeText={() => {}}
+          value={`$${((Number(calculateMonthlyPayment(product.amount, product.interest, product.term)) * Number(product.term)) - Number(product.amount)).toFixed(2)}`}
+          onChangeText={() => { }}
           icon="trending-up"
           readOnly={true}
         />
         <LoanInputField
           label="Total Repayment"
           placeholder=""
-          value={`$${(Number(monthlyPayment) * Number(term)).toFixed(2)}`}
-          onChangeText={() => {}}
+          value={`$${(Number(calculateMonthlyPayment(product.amount, product.interest, product.term)) * Number(product.term)).toFixed(2)}`}
+          onChangeText={() => { }}
           icon="account-balance-wallet"
           readOnly={true}
         />
@@ -684,25 +652,25 @@ export default function LoanApplication() {
         <View className="space-y-4">
           <View className="flex-row justify-between">
             <Text className="text-gray-500 text-base">Loan Type:</Text>
-            <Text className="font-semibold text-base">{loanType}</Text>
+            <Text className="font-semibold text-base">{product.name}</Text>
           </View>
           <View className="flex-row justify-between">
             <Text className="text-gray-500 text-base">Amount:</Text>
-            <Text className="font-semibold text-base">${Number(amount).toLocaleString()}</Text>
+            <Text className="font-semibold text-base">${Number(product.amount).toLocaleString()}</Text>
           </View>
           <View className="flex-row justify-between">
             <Text className="text-gray-500 text-base">Interest Rate:</Text>
-            <Text className="font-semibold text-base">{interestRate}%</Text>
+            <Text className="font-semibold text-base">{product.interest}%</Text>
           </View>
           <View className="flex-row justify-between">
             <Text className="text-gray-500 text-base">Term:</Text>
             <Text className="font-semibold text-base">
-              {Number(term) >= 12 ? `${Math.round(Number(term) / 12)} years` : `${term} months`}
+              {Number(product.term) >= 12 ? `${Math.round(Number(product.term) / 12)} years` : `${product.term} months`}
             </Text>
           </View>
           <View className="flex-row justify-between">
             <Text className="text-gray-500 text-base">Monthly Payment:</Text>
-            <Text className="font-semibold text-base">${Number(monthlyPayment).toLocaleString()}</Text>
+            <Text className="font-semibold text-base">${Number(calculateMonthlyPayment(product.amount, product.interest, product.term)).toLocaleString()}</Text>
           </View>
           <View className="flex-row justify-between">
             <Text className="text-gray-500 text-base">Purpose:</Text>
@@ -774,7 +742,7 @@ export default function LoanApplication() {
 
   return (
     <ScrollView className="flex-1 bg-white px-4 pt-6">
-      <Toast/>
+      <Toast />
       {step === 1 && renderStep1()}
       {step === 2 && renderStep2()}
       {step === 3 && renderStep3()}

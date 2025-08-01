@@ -10,4 +10,5 @@ public class LoanPaymentDTO {
     private LocalDateTime dueDate;
     private LocalDateTime paidDate;
     private String status;
+    private LoanDTO loan;
 }

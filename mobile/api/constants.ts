@@ -1,6 +1,6 @@
 // API Configuration Constants
 
-const SERVER_URL = 'http://192.168.1.70:8089'
+const SERVER_URL = 'http://192.168.43.223:8089'
 
 export const API_CONFIG = {
   BASE_URL: SERVER_URL,
@@ -28,7 +28,6 @@ export const API_ENDPOINTS = {
     EXPORT: '/user/export',
     DELETE: '/user'
   },
-
   LOAN: {
     HISTORY: '/loans/history',
     CURRENT: '/loans/current',

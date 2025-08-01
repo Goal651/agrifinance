@@ -17,27 +17,14 @@ import {
 import LoanAnalytics from './LoanAnalytics';
 import LoanHistory from './LoanHistory';
 import LoanPayments from './LoanPayments';
+import { useLoan } from '@/hooks/useLoan';
 
-const loanProducts: LoanProduct[] = [
-    {
-        name: 'Farming Equipment Loan',
-        description: 'Finance essential farming equipment with competitive rates',
-        minAmount: 10000,
-        interest: 3.5,
-        termMonths: 36,
-    },
-    {
-        name: 'Seasonal Crop Financing',
-        description: 'Short-term financing for seasonal planting needs',
-        minAmount: 5000,
-        interest: 4.0,
-        termMonths: 12,
-    },
-];
+
 
 export default function LoanServicesScreen() {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('overview');
+    const { loanProducts } = useLoan();
 
     const tabs = [
         { id: 'overview', title: 'Overview', icon: HomeIcon },
@@ -66,13 +53,12 @@ export default function LoanServicesScreen() {
                             style={isActive ? { borderBottomWidth: 3, borderBottomColor: '#059669' } : {}}
                             onPress={() => setActiveTab(tab.id)}
                         >
-                            <IconComponent 
-                                size={24} 
-                                color={isActive ? '#059669' : '#6b7280'} 
+                            <IconComponent
+                                size={24}
+                                color={isActive ? '#059669' : '#6b7280'}
                             />
-                            <Text className={`text-sm mt-1 font-medium ${
-                                isActive ? 'text-green-700' : 'text-gray-500'
-                            }`}>
+                            <Text className={`text-sm mt-1 font-medium ${isActive ? 'text-green-700' : 'text-gray-500'
+                                }`}>
                                 {tab.title}
                             </Text>
                         </TouchableOpacity>
@@ -87,7 +73,7 @@ export default function LoanServicesScreen() {
                         <Text className="text-gray-600 mb-6 text-base">
                             Access agricultural financing with ease and transparency
                         </Text>
-                        
+
                         <View className="bg-green-50 rounded-2xl p-6 mb-6">
                             <View className="flex-row items-center justify-between mb-4">
                                 <Text className="font-bold text-lg text-green-800">Loan Status</Text>
@@ -124,7 +110,7 @@ export default function LoanServicesScreen() {
                                     <View className="flex-row justify-between items-center mb-4">
                                         <View>
                                             <Text className="text-gray-500 text-sm">Min Amount</Text>
-                                            <Text className="font-bold text-lg">${product.minAmount.toLocaleString()}</Text>
+                                            <Text className="font-bold text-lg">${product.amount.toLocaleString()}</Text>
                                         </View>
                                         <View>
                                             <Text className="text-gray-500 text-sm">Interest Rate</Text>
@@ -132,12 +118,15 @@ export default function LoanServicesScreen() {
                                         </View>
                                         <View>
                                             <Text className="text-gray-500 text-sm">Term</Text>
-                                            <Text className="font-bold text-lg">{product.termMonths} months</Text>
+                                            <Text className="font-bold text-lg">{product.termType==='YEARS'?product.term/12:product.term} {product.termType.toLocaleLowerCase()}</Text>
                                         </View>
                                     </View>
                                     <Button
                                         title="Apply Now"
-                                        onPress={() => router.push('/LoanApplication')}
+                                        onPress={() => router.push({
+                                            pathname: '/LoanApplication',
+                                            params: { product: JSON.stringify(product) }
+                                        })}
                                         size="medium"
                                     />
                                 </View>
@@ -148,7 +137,7 @@ export default function LoanServicesScreen() {
                     {/* Quick Actions */}
                     <Card title="Quick Actions">
                         <View className="space-y-4">
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 className="flex-row items-center justify-between bg-gray-50 rounded-2xl p-4"
                                 onPress={() => router.push('/LoanApplication')}
                             >
@@ -164,7 +153,7 @@ export default function LoanServicesScreen() {
                                 <ArrowRightIcon size={20} color="#6b7280" />
                             </TouchableOpacity>
 
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 className="flex-row items-center justify-between bg-gray-50 rounded-2xl p-4"
                                 onPress={() => setActiveTab('payments')}
                             >

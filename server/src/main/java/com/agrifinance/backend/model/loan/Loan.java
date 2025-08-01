@@ -18,21 +18,29 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(indexes = @Index(name = "idx_loan_user_id", columnList = "user_id"))
+@Table(indexes = {
+        @Index(name = "idx_loan_user_id", columnList = "user_id"),
+        @Index(name = "idx_loan_status", columnList = "status"),
+        @Index(name = "idx_loan_created_at", columnList = "createdAt"),
+        @Index(name = "idx_loan_product_id", columnList = "loan_product_id")
+})
 public class Loan {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
+    private String purpose;
+
     @Enumerated(EnumType.STRING)
     private LoanStatus status;
 
-    @Embedded
-    private LoanDetails details;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "loan_product_id")
+    private LoanProduct details;
 
     @Embedded
     private LoanInfo info;

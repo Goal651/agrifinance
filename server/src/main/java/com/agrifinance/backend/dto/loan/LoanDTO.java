@@ -1,7 +1,9 @@
 package com.agrifinance.backend.dto.loan;
 
+import com.agrifinance.backend.dto.user.UserDTO;
 import com.agrifinance.backend.model.enums.LoanStatus;
-import com.agrifinance.backend.model.enums.LoanTermType;
+import com.agrifinance.backend.model.loan.LoanInfo;
+
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -10,24 +12,16 @@ import java.util.List;
 @Data
 public class LoanDTO {
     private String id;
-    private String userId;
+    private UserDTO user;
     private LoanStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Double paidAmount;
     
     // Loan Details
-    private Double amount;
-    private Double interest;
-    private String type;
-    private Integer term;
-    private LoanTermType termType;
-    private String purpose;
+    private LoanProductDTO details;
+    private LoanInfo info;
     
-    // Loan Info
-    private PersonalInfoDTO personalInfo;
-    private FinancialInfoDTO financialInfo;
-    private DocumentUploadDTO documents;
     
     private List<LoanPaymentDTO> payments;
 }

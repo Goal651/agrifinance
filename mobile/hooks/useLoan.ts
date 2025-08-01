@@ -1,5 +1,5 @@
 import { loanService } from '@/api/loan';
-import { Loan, LoanAnalytics, LoanRequest } from '@/types';
+import { Loan, LoanAnalytics, LoanProduct, LoanRequest } from '@/types';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import Toast from 'react-native-toast-message';
@@ -8,6 +8,7 @@ export function useLoan() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [loans, setLoans] = useState<Loan[]>([]);
+    const [loanProducts, setLoanProducts] = useState<LoanProduct[]>([]);
     const [currentLoan,setCurrentLoan] = useState<Loan | null>(null);
     const [loanAnalytics, setLoanAnalytics] = useState<LoanAnalytics | null>(null);
 
@@ -49,6 +50,19 @@ export function useLoan() {
                 // Optionally handle error
             }
         };
+        const fetchLoanProducts = async () => {
+            try {
+                const res = await loanService.getLoanProducts();
+                if (res.success) {
+                    setLoanProducts(res.data);
+                } else {
+                    Toast.show({ type: 'error', text1: 'Failed to load loan products', text2: res.message });
+                }
+            } catch (error) {
+                Toast.show({ type: 'error', text1: 'Error', text2: error?.message || 'Unknown error' });
+            }
+        };
+        fetchLoanProducts();
         fetchCurrentLoan();
         fetchLoans();
         fetchAnalytics();
@@ -122,9 +136,9 @@ export function useLoan() {
     };
 
     const history = loans.map((loan) => ({
-        type: loan.type || loan.type || 'Unknown',
-        amount: loan.amount,
-        status: loan.status === 'repaid' || loan.status === 'completed' ? 'Completed' : 'Active',
+        type: loan.details.name || 'Unknown',
+        amount: loan.details.amount,
+        status: loan.status || 'Unknown',
     }));
 
     return {
@@ -137,5 +151,6 @@ export function useLoan() {
         currentLoan,
         loanAnalytics,
         getLoanAnalytics,
+        loanProducts,
     };
 }
