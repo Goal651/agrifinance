@@ -13,4 +13,3 @@ export interface User {
   status: string
   createdAt:string
 }
-

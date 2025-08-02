@@ -1,4 +1,4 @@
-import { Project, ProjectAnalytics, ProjectCreateRequest, ProjectUpdateRequest } from '@/types';
+import { GoalCreateRequest, Project, ProjectAnalytics, ProjectCreateRequest,  TaskCreateRequest } from '@/types';
 import { ApiResponse } from '@/types/api';
 import { client } from './client';
 import { API_ENDPOINTS } from './constants';
@@ -16,9 +16,6 @@ class ProjectService {
     return await client.post<Project>(API_ENDPOINTS.PROJECT.CREATE, data);
   }
 
-  async updateProject(id: string | number, data: ProjectUpdateRequest): Promise<ApiResponse<Project>> {
-    return await client.put<Project>(API_ENDPOINTS.PROJECT.UPDATE(id), data);
-  }
 
   async deleteProject(id: string | number): Promise<ApiResponse<void>> {
     return await client.delete<void>(API_ENDPOINTS.PROJECT.DELETE(id));
@@ -26,6 +23,14 @@ class ProjectService {
 
   async getProjectAnalytics(): Promise<ApiResponse<ProjectAnalytics>> {
     return await client.get<ProjectAnalytics>(API_ENDPOINTS.PROJECT.ANALYTICS);
+  }
+
+  async createGoal(goalRequest: GoalCreateRequest): Promise<ApiResponse<Project>> {
+    return await client.post<Project>(API_ENDPOINTS.PROJECT.GOAL.CREATE, goalRequest);
+  }
+
+  async createTask(taskRequest: TaskCreateRequest): Promise<ApiResponse<Project>> {
+    return await client.post<Project>(API_ENDPOINTS.PROJECT.TASK.CREATE, taskRequest)
   }
 }
 

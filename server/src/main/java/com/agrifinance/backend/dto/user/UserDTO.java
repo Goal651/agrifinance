@@ -2,7 +2,7 @@ package com.agrifinance.backend.dto.user;
 
 import java.util.UUID;
 
-import com.agrifinance.backend.model.user.Role;
+import com.agrifinance.backend.model.enums.Role;
 
 import lombok.Data;
 

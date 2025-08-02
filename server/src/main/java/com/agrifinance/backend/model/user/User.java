@@ -5,12 +5,14 @@ import lombok.*;
 
 import java.util.UUID;
 
+import com.agrifinance.backend.model.enums.Role;
+
 @Entity
+@Table(name = "users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "`user`")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -27,6 +29,5 @@ public class User {
     
     @Enumerated(EnumType.STRING)
     private Role role;
-    
-    private String status;
+        private String status;
 }

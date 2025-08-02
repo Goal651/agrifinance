@@ -103,11 +103,11 @@ export default function AdminDashboard() {
                     {projects.map((p, i) => (
                         <View key={p.name} className="mb-2">
                             <Text className="font-semibold text-gray-700">{p.name}</Text>
-                            <Text className="text-xs text-gray-500 mb-1">{p.user}</Text>
+                            <Text className="text-xs text-gray-500 mb-1">{p.user.firstName}</Text>
                             <View className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <View className={`h-2  rounded-full`} style={{ width: `${p.details.progress}%` }} />
+                                {/* <View className={`h-2  rounded-full`} style={{ width: `${p.goals.}%` }} /> */}
                             </View>
-                            <Text className="text-xs text-gray-700 mt-1">{p.details.progress}%</Text>
+                            {/* <Text className="text-xs text-gray-700 mt-1">{p.details.progress}%</Text> */}
                         </View>
                     ))}
                     <TouchableOpacity className="mt-2 border border-green-700 rounded-full py-2 items-center" onPress={() => router.push('/admin-project')}>

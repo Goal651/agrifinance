@@ -1,12 +1,12 @@
 package com.agrifinance.backend.seed;
 
 import com.agrifinance.backend.model.user.User;
-import com.agrifinance.backend.model.user.Role;
 import com.agrifinance.backend.model.enums.LoanStatus;
 import com.agrifinance.backend.model.loan.*;
 import com.agrifinance.backend.model.loan.LoanInfo;
 import com.agrifinance.backend.model.enums.LoanTermType;
 import com.agrifinance.backend.model.enums.ProjectStatus;
+import com.agrifinance.backend.model.enums.Role;
 import com.agrifinance.backend.model.project.Project;
 import com.agrifinance.backend.repository.*;
 import lombok.RequiredArgsConstructor;

@@ -3,7 +3,6 @@ package com.agrifinance.backend.model.project;
 import jakarta.persistence.*;
 import lombok.*;
 
-import com.agrifinance.backend.model.enums.GoalStatus;
 import com.agrifinance.backend.model.enums.ProjectStatus;
 import com.agrifinance.backend.model.user.User;
 
@@ -23,10 +22,6 @@ public class Project {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
-
     private String name;
     private String description;
 
@@ -38,14 +33,19 @@ public class Project {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<ProjectGoal> goals = new ArrayList<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @OneToMany( cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "project_id") 
+    private List<ProjectGoal> goals;
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+        this.goals = new ArrayList<>();
         if (this.status == null) {
             this.status = ProjectStatus.NOT_STARTED;
         }
@@ -56,35 +56,5 @@ public class Project {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void updateStatus() {
-        if (goals == null || goals.isEmpty()) {
-            this.status = ProjectStatus.NOT_STARTED;
-            return;
-        }
 
-        boolean allGoalsCompleted = goals.stream()
-            .allMatch(goal -> goal.getStatus() == GoalStatus.COMPLETED);
-            
-        boolean anyGoalInProgress = goals.stream()
-            .anyMatch(goal -> goal.getStatus() == GoalStatus.IN_PROGRESS);
-            
-        if (allGoalsCompleted) {
-            this.status = ProjectStatus.COMPLETED;
-            this.completedAt = LocalDateTime.now();
-        } else if (anyGoalInProgress || this.status == ProjectStatus.NOT_STARTED) {
-            this.status = ProjectStatus.IN_PROGRESS;
-        }
-    }
-
-    public void addGoal(ProjectGoal goal) {
-        goals.add(goal);
-        goal.setProject(this);
-        updateStatus();
-    }
-
-    public void removeGoal(ProjectGoal goal) {
-        goals.remove(goal);
-        goal.setProject(null);
-        updateStatus();
-    }
 }

@@ -1,6 +1,6 @@
 // API Configuration Constants
 
-const SERVER_URL = 'http://192.168.43.223:8089'
+const SERVER_URL = 'http://192.168.50.223:8089'
 
 export const API_CONFIG = {
   BASE_URL: SERVER_URL,
@@ -43,16 +43,50 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string | number) => `/projects/${id}`,
     DELETE: (id: string | number) => `/projects/${id}`,
     ANALYTICS: '/projects/analytics',
+    GOAL: {
+      CREATE: '/projects/goal',
+    },
+    TASK:{
+      CREATE:'projects/task'
+    }
   },
+
   ADMIN: {
-    LOAN: {
-      ALL: '/admin/loans'
-    },
-    PROJECT: {
-      ALL: '/admin/projects'
-    },
+    // User Management
     USER: {
-      ALL: '/admin/users'
+      BASE: '/admin/users',
+      ALL: '/admin/users',
+      CREATE: '/admin/users',
+      ROLES: '/admin/roles',
+    },
+
+    // Role Management
+    ROLE: {
+      ALL: '/admin/roles',
+      PERMISSIONS: '/admin/roles/permissions',
+    },
+
+    // Loan Management
+    LOAN: {
+      BASE: '/admin/loans',
+      ALL: '/admin/loans',
+      APPROVE: '/admin/loans/approve',
+      REJECT: '/admin/loans/reject',
+      STATS: '/admin/loans/stats',
+    },
+
+    // Project Management
+    PROJECT: {
+      BASE: '/admin/projects',
+      ALL: '/admin/projects',
+      ANALYTICS: '/admin/projects/analytics',
+    },
+
+    // Dashboard
+    DASHBOARD: {
+      BASE: '/admin/dashboard',
+      STATS: '/admin/dashboard/stats',
+      ACTIVITIES: '/admin/dashboard/activities',
     }
   },
 };

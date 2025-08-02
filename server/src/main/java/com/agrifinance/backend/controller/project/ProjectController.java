@@ -1,82 +1,70 @@
 package com.agrifinance.backend.controller.project;
 
 import com.agrifinance.backend.dto.common.ApiResponse;
+import com.agrifinance.backend.dto.project.GoalRequest;
 import com.agrifinance.backend.dto.project.ProjectDTO;
-import com.agrifinance.backend.security.jwt.JwtUtil;
+import com.agrifinance.backend.dto.project.ProjectRequest;
+import com.agrifinance.backend.dto.project.TaskRequest;
+import com.agrifinance.backend.model.user.User;
 import com.agrifinance.backend.service.project.ProjectService;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
+import com.agrifinance.backend.service.user.UserService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
+
+import org.springframework.web.bind.annotation.GetMapping;
 
 @RestController
 @RequestMapping("/api/projects")
 @RequiredArgsConstructor
-@Tag(name = "Projects")
 public class ProjectController {
     private final ProjectService projectService;
-    private final JwtUtil jwtUtil;
-
-    private UUID getUserId(HttpServletRequest request) {
-        String token = request.getHeader("Authorization").substring(7);
-        return UUID.fromString(jwtUtil.getClaims(token).get("userId", String.class));
-    }
-
-    @GetMapping("/overview")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponse<ProjectDTO>> getOverview(HttpServletRequest request) {
-        ProjectDTO data = projectService.getProjectOverview(getUserId(request));
-        return ResponseEntity.ok(new ApiResponse<>(true, data, "Project overview fetched successfully"));
-    }
+    private final UserService userService;
 
     @GetMapping
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponse<List<ProjectDTO>>> getProjects(HttpServletRequest request,
-        @RequestParam(required = false) String status,
-        @RequestParam(required = false) String search) {
-        List<ProjectDTO> data = projectService.getProjects(getUserId(request), status, search);
-        return ResponseEntity.ok(new ApiResponse<>(true, data, "Projects fetched successfully"));
-    }
-
-
-    @GetMapping("/analytics")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> getAnalytics(HttpServletRequest request) {
-        Map<String, Object> data = projectService.getProjectAnalytics(getUserId(request));
-        return ResponseEntity.ok(new ApiResponse<>(true, data, "Project analytics fetched successfully"));
+    public ResponseEntity<ApiResponse<List<ProjectDTO>>> getProjects(Principal principal) {
+        User user = userService.getUserByEmail(principal.getName());
+        List<ProjectDTO> projectDTOs = projectService.getProjects(user.getId());
+        ApiResponse<List<ProjectDTO>> apiResponse = new ApiResponse<>(true, projectDTOs, "Project loaded successfully");
+        return ResponseEntity.ok(apiResponse);
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponse<ProjectDTO>> getProjectById(HttpServletRequest request, @PathVariable("id") String id) {
-        ProjectDTO data = projectService.getProjectById(getUserId(request), id);
-        return ResponseEntity.ok(new ApiResponse<>(true, data, "Project fetched successfully"));
+    public ResponseEntity<ApiResponse<ProjectDTO>> getProjectById(@PathVariable String id) {
+        if (id == null || id.isEmpty()) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, null, "Invalid project ID"));
+        }
+        ProjectDTO projectDTO = projectService.getProjectById(UUID.fromString(id));
+        ApiResponse<ProjectDTO> apiResponse = new ApiResponse<>(true, projectDTO, "Project loaded successfully");
+        return ResponseEntity.ok(apiResponse);
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponse<ProjectDTO>> create(HttpServletRequest request, @RequestBody ProjectDTO dto) {
-        ProjectDTO data = projectService.createProject(getUserId(request), dto);
-        return ResponseEntity.ok(new ApiResponse<>(true, data, "Project created successfully"));
+    public ResponseEntity<ApiResponse<ProjectDTO>> createProject(@RequestBody ProjectRequest projectDTO,
+            Principal principal) {
+        System.out.println(projectDTO);
+        ProjectDTO savedProjectDTO = projectService.createNewProject(projectDTO, principal.getName());
+        ApiResponse<ProjectDTO> apiResponse = new ApiResponse<>(true, savedProjectDTO, "Project created successfully");
+        return ResponseEntity.ok(apiResponse);
     }
 
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponse<ProjectDTO>> update(HttpServletRequest request, @PathVariable("id") String id, @RequestBody ProjectDTO dto) {
-        ProjectDTO data = projectService.updateProject(getUserId(request), id, dto);
-        return ResponseEntity.ok(new ApiResponse<>(true, data, "Project updated successfully"));
+    @PostMapping("/goal")
+    public ResponseEntity<ApiResponse<ProjectDTO>> createProjectGoal(@RequestBody GoalRequest goalRequest) {
+        ProjectDTO savedProjectDTO = projectService.createNewGoal(goalRequest);
+        ApiResponse<ProjectDTO> apiResponse = new ApiResponse<>(true, savedProjectDTO, "Project created successfully");
+        return ResponseEntity.ok(apiResponse);
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponse<Void>> delete(HttpServletRequest request, @PathVariable("id") String id) {
-        projectService.deleteProject(getUserId(request), id);
-        return ResponseEntity.ok(new ApiResponse<>(true, null, "Project deleted successfully"));
+    @PostMapping("/task")
+    public ResponseEntity<ApiResponse<Void>> createGoalTask(@RequestBody TaskRequest taskRequest) {
+        projectService.createNewTask(taskRequest);
+        ApiResponse<Void> apiResponse = new ApiResponse<>(true, null, "Project created successfully");
+        return ResponseEntity.ok(apiResponse);
     }
+
 }

@@ -5,15 +5,19 @@ import Input from '@/components/ui/Input';
 import { useProject } from '@/hooks/useProject';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+
 
 export default function NewProjectScreen() {
     const { createProject, loading } = useProject();
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
-    const [startDate, setStartDate] = useState('');
+    const [showDobPicker, setShowDobPicker] = useState(false)
+    const [endDate, setEndDate] = useState<Date>(new Date());
     const [errors, setErrors] = useState<{ name?: string; description?: string; startDate?: string; }>({});
+
     const router = useRouter();
 
     const validateForm = () => {
@@ -27,7 +31,7 @@ export default function NewProjectScreen() {
             newErrors.description = 'Project description is required';
         }
 
-        if (!startDate.trim()) {
+        if (!endDate) {
             newErrors.startDate = 'Start date is required';
         }
 
@@ -42,19 +46,19 @@ export default function NewProjectScreen() {
             await createProject({
                 name: name.trim(),
                 description: description.trim(),
-                startDate: startDate.trim(),
+                targetDate: endDate,
             });
             Toast.show({ type: 'success', text1: 'Project created successfully' });
             router.back();
         } catch (error) {
-            Toast.show({ type: 'error', text1: 'Failed to create project' });
+            Toast.show({ type: 'error', text1: 'Failed to create project', text2: error });
         }
     };
 
     return (
         <View className="flex-1 bg-gray-50">
-            <Toast/>
-            
+            <Toast />
+
             <Header
                 title="Create New Project"
                 subtitle="Start a new farming project"
@@ -85,15 +89,32 @@ export default function NewProjectScreen() {
                         error={errors.description}
                     />
 
-                    <Input
-                        label="Start Date"
-                        placeholder="YYYY-MM-DD"
-                        value={startDate}
-                        onChangeText={setStartDate}
-                        icon="event"
-                        required
-                        error={errors.startDate}
-                    />
+                    {/* Date of Birth */}
+                    <View className="mb-4">
+                        <Text className="text-gray-700 mb-2 font-medium">Date of Birth</Text>
+                        <TouchableOpacity
+                            className="border border-gray-300 rounded-md p-4"
+                            onPress={() => setShowDobPicker(true)}
+                        >
+                            <Text className={endDate ? 'text-black' : 'text-gray-400'}>
+                                {endDate.toLocaleDateString() || 'Tap to choose'}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+
+                    {showDobPicker && <DateTimePicker
+                        value={endDate}
+                        onChange={(event: DateTimePickerEvent, date?: Date) => {
+                            setShowDobPicker(false);
+                            if (date) setEndDate(date);
+
+                        }}
+                        mode="date"
+                        display="default"
+                        minimumDate={new Date()}
+                        maximumDate={new Date(new Date().setFullYear(new Date().getFullYear() + 1))}
+                    />}
 
                     <Button
                         title="Create Project"

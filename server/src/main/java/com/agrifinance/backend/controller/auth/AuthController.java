@@ -4,7 +4,7 @@ import com.agrifinance.backend.dto.common.ApiResponse;
 import com.agrifinance.backend.dto.auth.AuthRequest;
 import com.agrifinance.backend.dto.auth.AuthResponse;
 import com.agrifinance.backend.dto.auth.SignupRequest;
-import com.agrifinance.backend.model.user.Role;
+import com.agrifinance.backend.model.enums.Role;
 import com.agrifinance.backend.model.user.User;
 import com.agrifinance.backend.repository.UserRepository;
 import com.agrifinance.backend.security.jwt.JwtUtil;

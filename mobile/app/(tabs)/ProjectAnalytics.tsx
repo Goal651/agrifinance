@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
-import { Svg, Circle, Rect, Text as SvgText, G, Path } from 'react-native-svg';
+import { Svg, Circle, Text as SvgText, G, Path } from 'react-native-svg';
 import { MaterialIcons } from '@expo/vector-icons';
 
 const progressData = [65, 30, 15];

@@ -3,34 +3,24 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import ProjectAnalytics from './ProjectAnalytics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useProject } from '@/hooks/useProject';
 
 export default function ProjectServices() {
-  const { projects, analytics } = useProject();
+  const { projects, activeProjects, analytics,  } = useProject();
   const [activeTab, setActiveTab] = useState('overview');
   const [goalFilter, setGoalFilter] = useState('all');
   const router = useRouter();
 
-  const handleLogout = async () => {
-    try {
-      await AsyncStorage.removeItem('auth_token');
-      router.replace({ pathname: '/admin-login' });
-    } catch (error) {
-      console.error('Error logging out:', error);
-    }
-  };
-
   return (
     <View className="flex-1 bg-gradient-to-b from-gray-50 to-gray-100">
       {/* Header Bar */}
-      <View className="bg-gradient-to-r from-blue-700 to-blue-800 pt-10 pb-3 px-4 flex-row items-center justify-between shadow-lg">
+      <View className=" bg-blue-700  pt-10 pb-3 px-4 flex-row items-center justify-between shadow-lg">
         <Text className="text-lg font-semibold text-white">Project Services</Text>
         <View className="flex-row space-x-4">
           <TouchableOpacity>
             <MaterialIcons name="notifications-none" size={22} color="white" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleLogout}>
+          <TouchableOpacity onPress={() => router.replace('/login')}>
             <MaterialIcons name="logout" size={22} color="white" />
           </TouchableOpacity>
         </View>
@@ -72,46 +62,43 @@ export default function ProjectServices() {
                         <View className="space-y-2">
                           <Text className="text-gray-500 text-sm">Status: {project.status}</Text>
                           <Text className="text-gray-500 text-sm">Start Date: {project.createdAt ? new Date(project.createdAt).toLocaleDateString() : 'N/A'}</Text>
-                          
+
                           {/* Goals Section */}
                           <Text className="text-sm font-semibold text-gray-700 mt-3">Goals ({project.goals?.length || 0})</Text>
                           {project.goals?.map((goal) => (
                             <View key={goal.id} className="mt-2">
                               <View className="flex-row items-center mb-1">
-                                {goal.status === 'done' ? (
+                                {goal.status === 'COMPLETED' ? (
                                   <MaterialIcons name="check-circle" size={16} color="#22c55e" className="mr-2" />
                                 ) : (
                                   <MaterialIcons name="radio-button-unchecked" size={16} color="#f59e42" className="mr-2" />
                                 )}
                                 <Text className="text-base font-medium">{goal.name}</Text>
                               </View>
-                              
+
                               {/* Activities Section */}
                               <View className="ml-6 space-y-1">
-                                {goal.activities?.map((activity) => (
-                                  <View key={activity.id} className="flex-row items-center">
+                                {goal.tasks?.map((task) => (
+                                  <View key={task.id} className="flex-row items-center">
                                     <View className="w-2 h-2 bg-gray-300 rounded-full mr-2" />
-                                    <Text className="text-sm text-gray-600">{activity.name}</Text>
+                                    <Text className="text-sm text-gray-600">{task.name}</Text>
                                   </View>
                                 ))}
                               </View>
-                              
-                              {/* Progress Bar */}
-                              <View className="mt-2">
-                                <Text className="text-xs text-gray-500">Progress: {goal.progress}%</Text>
-                                <View className="h-2 bg-gray-200 rounded-full mt-1">
-                                  <View 
-                                    className="h-2 rounded-full bg-blue-700"
-                                    style={{ width: `${goal.progress}%` }}
-                                  />
-                                </View>
-                              </View>
+
+
                             </View>
                           ))}
                         </View>
                       </View>
                       <View className="flex-col space-y-2">
-                        <TouchableOpacity className="bg-blue-700 px-4 py-2 rounded-full">
+                        <TouchableOpacity className="bg-blue-700 px-4 py-2 rounded-full"
+                          onPress={() => {
+                            router.push({
+                              pathname: '/(tabs)/ProjectView',
+                              params: { id: project.id }
+                            })
+                          }}>
                           <Text className="text-white font-semibold">View Details</Text>
                         </TouchableOpacity>
                         <TouchableOpacity className="border border-blue-700 px-4 py-2 rounded-full">
@@ -149,7 +136,7 @@ export default function ProjectServices() {
             </View>
             {/* Active Projects */}
             <Text className="font-bold text-lg mb-2">Active Projects</Text>
-            {projects.map((project, idx) => (
+            {activeProjects.map((project, idx) => (
               <View key={project.id} className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-4 mb-4 border border-gray-100/50">
                 <View className="flex-row justify-between mb-1">
                   <Text className="font-bold text-base">{project.name}</Text>
@@ -161,19 +148,21 @@ export default function ProjectServices() {
                 {/* Goals */}
                 {project.goals?.slice(0, 3).map((goal, i) => (
                   <View key={goal.id || goal.name} className="flex-row items-center mb-1">
-                    {goal.status === 'done' ? (
+                    {goal.status === 'COMPLETED' ? (
                       <MaterialIcons name="check-circle" size={16} color="#22c55e" className="mr-1" />
                     ) : (
                       <MaterialIcons name="radio-button-unchecked" size={16} color="#f59e42" className="mr-1" />
                     )}
-                    <Text className={goal.status === 'done' ? 'text-green-700 ml-1' : 'text-yellow-700 ml-1'}>{goal.name}</Text>
+                    <Text className={goal.status === 'COMPLETED' ? 'text-green-700 ml-1' : 'text-yellow-700 ml-1'}>{goal.name}</Text>
                   </View>
                 ))}
                 {project.goals && project.goals.length > 3 && (
                   <Text className="text-green-700 text-xs ml-6 mb-2">+{project.goals.length - 3} more goals</Text>
                 )}
                 <View className="flex-row justify-between mt-2">
-                  <TouchableOpacity className="flex-1 items-center justify-center bg-white/80 backdrop-blur-sm border border-blue-700 rounded-full py-2 mr-2" style={{ minWidth: 110 }}>
+                  <TouchableOpacity className="flex-1 items-center justify-center bg-white/80 backdrop-blur-sm border border-blue-700 rounded-full py-2 mr-2"
+                    onPress={() => router.push({ pathname: `/(tabs)/ProjectView`, params: { id: project.id } })}
+                    style={{ minWidth: 110 }}>
                     <Text className="text-blue-700 font-semibold">View Details</Text>
                   </TouchableOpacity>
                   <TouchableOpacity className="flex-1 items-center justify-center bg-blue-700/90 rounded-full py-2 ml-2" style={{ minWidth: 110 }}>
@@ -222,8 +211,8 @@ export default function ProjectServices() {
                 (project.goals || [])
                   .filter(g =>
                     goalFilter === 'all' ? true :
-                    goalFilter === 'done' ? g.status === 'done' :
-                    goalFilter === 'active' ? g.status === 'active' : true
+                      goalFilter === 'done' ? g.status === 'COMPLETED' :
+                        goalFilter === 'active' ? g.status === 'IN_PROGRESS' : true
                   )
                   .map((g, idx) => (
                     <View key={g.id || g.name + project.id} className="flex-row items-center px-2 py-2 border-b border-gray-100 last:border-b-0">

@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
-public class AdminDashboardController {
+public class AdminController {
     private final AdminService adminService;
     private final LoanMapper loanMapper;
     private final UserMapper userMapper;

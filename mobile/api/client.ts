@@ -18,7 +18,7 @@ class ApiClient {
 
         // Request interceptor to add auth token
         this.axiosInstance.interceptors.request.use(
-           async (config) => {
+            async (config) => {
                 try {
                     const token = await this.getAuthToken();
                     if (token) {
@@ -58,7 +58,7 @@ class ApiClient {
                     }
                     throw new Error('Network error');
                 } catch (err) {
-                    console.error('Error in response interceptor:', err.message, "this is another error\n", error.status === HTTP_STATUS.UNAUTHORIZED);
+                    console.error('Error in response interceptor:', err);
                     return Promise.reject(err);
                 }
             }
@@ -123,7 +123,7 @@ class ApiClient {
         } catch (error) {
             console.error(`GET ${endpoint} failed:`, error.message);
             if (error.status === HTTP_STATUS.UNAUTHORIZED) {
-
+                console.error(error)
             }
             throw error;
         }
@@ -136,7 +136,7 @@ class ApiClient {
         } catch (error) {
             console.error(error.message, `POST ${endpoint} failed:`, error.request.header);
             if (error.status === HTTP_STATUS.UNAUTHORIZED) {
-
+                console.error(error)
             }
             throw error;
         }

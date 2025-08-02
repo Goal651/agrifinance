@@ -101,7 +101,7 @@ export function useAdmin() {
         const summaryStats :Summary[] = [
             { label: 'Users', value: users.length, sub: users.filter(u => u.status === 'ACTIVE').length, color: 'bg-green-50', text: 'text-green-700' },
             { label: 'Loans', value: loans.length, sub: loans.filter(l => l.status === 'APPROVED').length, color: 'bg-blue-50', text: 'text-blue-700' },
-            { label: 'Projects', value: projects.length, sub: projects.filter(p => p.status === 'ACTIVE').length, color: 'bg-yellow-50', text: 'text-yellow-700' },
+            { label: 'Projects', value: projects.length, sub: projects.filter(p => p.status === 'IN_PROGRESS').length, color: 'bg-yellow-50', text: 'text-yellow-700' },
         ]
         setSummary(summaryStats)
         

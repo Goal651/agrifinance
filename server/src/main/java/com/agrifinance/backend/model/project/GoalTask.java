@@ -12,22 +12,17 @@ import com.agrifinance.backend.model.enums.TaskStatus;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "project_tasks")
-public class ProjectTask {
+@Table(name = "goal_tasks")
+public class GoalTask {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "goal_id")
-    private ProjectGoal goal;
-
-    private String title;
+    private String name;
     private String description;
+
     @Enumerated(EnumType.STRING)
-    private TaskStatus status; // NOT_STARTED, IN_PROGRESS, COMPLETED
-    private Integer priority; // 1-5 where 1 is highest
-    private LocalDateTime dueDate;
+    private TaskStatus status; 
     private LocalDateTime completedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
