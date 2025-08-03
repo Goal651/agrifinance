@@ -86,6 +86,6 @@ public class ProjectService {
         goalTaskRepository.save(goalTask);
         projectGoal.getTasks().add(goalTask);
         projectGoalRepository.save(projectGoal);
-        System.out.println(projectGoal);
+        System.out.println(projectGoal);         
     }
 }

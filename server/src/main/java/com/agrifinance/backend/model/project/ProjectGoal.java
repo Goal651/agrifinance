@@ -48,6 +48,10 @@ public class ProjectGoal {
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id")
+    private Project project;
 
     public void updateStatus() {
         if (tasks == null || tasks.isEmpty()) {

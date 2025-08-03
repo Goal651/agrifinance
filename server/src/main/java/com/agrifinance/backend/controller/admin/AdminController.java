@@ -1,5 +1,6 @@
 package com.agrifinance.backend.controller.admin;
 
+import com.agrifinance.backend.dto.admin.AdminProjectDTO;
 import com.agrifinance.backend.dto.common.ApiResponse;
 import com.agrifinance.backend.dto.loan.LoanDTO;
 import com.agrifinance.backend.dto.project.ProjectDTO;
@@ -37,11 +38,9 @@ public class AdminController {
     }
 
     @GetMapping("/projects")
-    public ResponseEntity<ApiResponse<List<ProjectDTO>>> getAllProjects() {
-        List<Project> projects = adminService.getAllProjects();
-        List<ProjectDTO> projectDTOs = projectMapper.toDTOs(projects);
-
-        ApiResponse<List<ProjectDTO>> apiResponse = new ApiResponse<>(true, projectDTOs, "User loaded successfully");
+    public ResponseEntity<ApiResponse<List<AdminProjectDTO>>> getAllProjects() {
+        List<AdminProjectDTO> projects = adminService.getAllProjects();
+        ApiResponse<List<AdminProjectDTO>> apiResponse = new ApiResponse<>(true, projects, "User loaded successfully");
         return ResponseEntity.ok(apiResponse);
     }
 
