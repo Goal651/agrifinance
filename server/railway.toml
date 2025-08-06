@@ -1,0 +1,22 @@
+[build]
+  builder = "Dockerfile"
+
+[deploy]
+  startCommand = "java -jar /app/app.jar"
+  healthcheckPath = "/actuator/health"
+  healthcheckTimeout = 30
+  restartPolicyType = "on-failure"
+  restartPolicyMaxRetries = 3
+
+[variables]
+  SPRING_PROFILES_ACTIVE = "prod"
+  SPRING_DATASOURCE_URL = "${DATABASE_URL}"
+  SPRING_DATASOURCE_USERNAME = "${DATABASE_USER}"
+  SPRING_DATASOURCE_PASSWORD = "${DATABASE_PASSWORD}"
+  SPRING_JPA_HIBERNATE_DDL_AUTO = "update"
+  SPRING_JPA_SHOW_SQL = "false"
+  SERVER_PORT = "8080"
+  
+# Uncomment and configure these if you're using JWT authentication
+#  JWT_SECRET = "${JWT_SECRET}"
+#  JWT_EXPIRATION_MS = "86400000"

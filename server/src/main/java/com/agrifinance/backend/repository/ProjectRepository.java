@@ -23,4 +23,9 @@ public interface ProjectRepository extends JpaRepository<Project, UUID>, JpaSpec
                      "LEFT JOIN FETCH g.tasks " +
                      "WHERE p.id IN :projectIds")
        List<Project> findProjectsWithGoalsAndTasks(@Param("projectIds") List<UUID> projectIds);
+
+       @Query("SELECT p FROM Project p " +
+              "LEFT JOIN FETCH p.goals g " +
+              "WHERE g.id = :goalId")
+    Project findByGoalId(@Param("goalId") UUID goalId);
 }

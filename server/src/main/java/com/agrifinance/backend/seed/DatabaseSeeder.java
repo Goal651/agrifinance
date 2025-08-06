@@ -29,25 +29,37 @@ public class DatabaseSeeder {
         @Bean
         public CommandLineRunner seedData() {
                 return args -> {
-                        if (userRepository.count() == 0) {
-                                User admin = User.builder()
-                                                .email("admin@agrifinance.com")
-                                                .password(passwordEncoder.encode("admin123"))
-                                                .firstName("Admin")
-                                                .lastName("User")
-                                                .role(Role.ADMIN)
-                                                .status("ACTIVE")
-                                                .build();
-                                User user = User.builder()
-                                                .email("user@agrifinance.com")
-                                                .password(passwordEncoder.encode("user123"))
-                                                .firstName("John")
-                                                .lastName("Farmer")
-                                                .role(Role.USER)
-                                                .status("ACTIVE")
-                                                .build();
-                                userRepository.saveAll(List.of(admin, user));
-                        }
+                        // First, create users if they don't exist
+                        User admin = userRepository.findByEmail("admin@agrifinance.com")
+                                        .orElseGet(() -> {
+                                                User newAdmin = User.builder()
+                                                                .email("admin@agrifinance.com")
+                                                                .password(passwordEncoder.encode("admin123"))
+                                                                .firstName("Admin")
+                                                                .lastName("User")
+                                                                .role(Role.ADMIN)
+                                                                .status("ACTIVE")
+                                                                .build();
+                                                return userRepository.save(newAdmin);
+                                        });
+
+                        User user = userRepository.findByEmail("user@agrifinance.com")
+                                        .orElseGet(() -> {
+                                                User newUser = User.builder()
+                                                                .email("user@agrifinance.com")
+                                                                .password(passwordEncoder.encode("user123"))
+                                                                .firstName("John")
+                                                                .lastName("Farmer")
+                                                                .role(Role.USER)
+                                                                .status("ACTIVE")
+                                                                .build();
+                                                return userRepository.save(newUser);
+                                        });
+
+                        // Get fresh instances to avoid any potential proxy issues
+                        admin = userRepository.findById(admin.getId()).orElseThrow();
+                        user = userRepository.findById(user.getId()).orElseThrow();
+                        List<User> allUsers = List.of(admin, user);
 
                         if (loanProductRepository.count() == 0) {
                                 LoanProduct lp1 = LoanProduct.builder()
@@ -69,13 +81,21 @@ public class DatabaseSeeder {
                                 loanProductRepository.saveAll(List.of(lp1, lp2));
                         }
 
-                        List<User> users = userRepository.findAll();
                         List<LoanProduct> products = loanProductRepository.findAll();
-                        LoanProduct cropLoan = products.get(0);
-                        LoanProduct cattleLoan = products.size() > 1 ? products.get(1) : products.get(0);
+                        LoanProduct cropLoan = products.stream()
+                                        .filter(lp -> lp.getName().equals("Standard Crop Loan"))
+                                        .findFirst()
+                                        .orElseThrow(() -> new RuntimeException("Crop loan product not found"));
+                        LoanProduct cattleLoan = products.stream()
+                                        .filter(lp -> lp.getName().equals("Livestock Loan"))
+                                        .findFirst()
+                                        .orElseThrow(() -> new RuntimeException("Livestock loan product not found"));
 
-                        if (loanRepository.count() == 0 && !users.isEmpty() && !products.isEmpty()) {
-                                User farmer = users.get(1);
+                        if (loanRepository.count() == 0 && !allUsers.isEmpty() && !products.isEmpty()) {
+                                User farmer = allUsers.stream()
+                                                .filter(u -> u.getRole().equals(Role.USER))
+                                                .findFirst()
+                                                .orElseThrow(() -> new RuntimeException("Farmer user not found"));
 
                                 // Create loan 1
                                 Loan loan1 = Loan.builder()
@@ -170,9 +190,15 @@ public class DatabaseSeeder {
                                 loanRepository.saveAll(List.of(loan1, loan2));
                         }
 
-                        if (projectRepository.count() == 0 && !users.isEmpty()) {
+                        if (projectRepository.count() == 0 && !allUsers.isEmpty()) {
+                                User farmer = allUsers.stream()
+                                .filter(u -> u.getRole().equals(Role.USER))
+                                .findFirst()
+                                .orElseThrow(() -> new RuntimeException("Farmer user not found"));
+
+                                // Admin creates the first project
                                 Project project1 = Project.builder()
-                                                .user(users.get(1))
+                                                .user(farmer)  
                                                 .name("Maize Expansion")
                                                 .description("Expanding maize farm by 5 acres.")
                                                 .status(ProjectStatus.NOT_STARTED)
@@ -181,8 +207,9 @@ public class DatabaseSeeder {
                                                 .createdAt(java.time.LocalDateTime.now().minusMonths(4))
                                                 .updatedAt(java.time.LocalDateTime.now().minusMonths(1))
                                                 .build();
+                                // Regular user creates the second project
                                 Project project2 = Project.builder()
-                                                .user(users.get(1))
+                                                .user(farmer)
                                                 .name("Dairy Upgrade")
                                                 .description("Upgrade dairy facilities for higher yield.")
                                                 .status(ProjectStatus.COMPLETED)

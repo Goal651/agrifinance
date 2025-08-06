@@ -22,10 +22,12 @@ import com.agrifinance.backend.repository.GoalRepository;
 import com.agrifinance.backend.repository.ProjectRepository;
 import com.agrifinance.backend.repository.UserRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -40,7 +42,6 @@ public class ProjectService {
 
     public List<ProjectDTO> getProjects(UUID userId) {
         List<Project> projects = projectRepository.findByUserId(userId);
-        System.out.println(projects);
         return projectMapper.toDTOs(projects);
     }
 
@@ -59,7 +60,6 @@ public class ProjectService {
 
         }
         projectDashboardDTO.setActiveProjects(projectMapper.toDTOs(activeProjects));
-        System.out.println(projectDashboardDTO);
         return projectDashboardDTO;
     }
 
@@ -81,33 +81,63 @@ public class ProjectService {
         return projectMapper.toDTO(project);
     }
 
+    @Transactional
     public ProjectDTO createNewGoal(GoalRequest goalRequest) {
-
         Project project = projectRepository.findById(UUID.fromString(goalRequest.getProject().getId()))
                 .orElseThrow();
-        Goal Goal = new Goal();
-        Goal.setName(goalRequest.getName());
-        Goal.setDescription(goalRequest.getDescription());
-        Goal.setStatus(GoalStatus.NOT_STARTED);
-        Goal newGoal = goalRepository.save(Goal);
+                
+        // Update project status if it was completed
+        if (project.getStatus() == ProjectStatus.COMPLETED) {
+            project.setStatus(ProjectStatus.IN_PROGRESS);
+            project.setCompletedAt(null);
+        }
+        
+        // Create and save the new goal
+        Goal goal = new Goal();
+        goal.setName(goalRequest.getName());
+        goal.setDescription(goalRequest.getDescription());
+        goal.setStatus(GoalStatus.NOT_STARTED);
+        
+        // Save the goal first to generate ID
+        Goal newGoal = goalRepository.save(goal);
+        
+        // Add goal to project and save
         project.getGoals().add(newGoal);
         projectRepository.save(project);
+        
         return projectMapper.toDTO(project);
     }
 
+    @Transactional
     public void createNewTask(TaskRequest taskRequest) {
-        Goal Goal = goalRepository.findById(UUID.fromString(taskRequest.getGoal().getId()))
+        Goal goal = goalRepository.findById(UUID.fromString(taskRequest.getGoal().getId()))
                 .orElseThrow();
         Worker worker = workerMapper.toEntity(taskRequest.getWorker());
-        System.out.println(worker);
+        
         Task goalTask = new Task();
         goalTask.setName(taskRequest.getName());
         goalTask.setDescription(taskRequest.getDescription());
         goalTask.setStatus(TaskStatus.NOT_STARTED);
         goalTask.setWorker(worker);
+        
+        // Save task first
         taskRepository.save(goalTask);
-        Goal.getTasks().add(goalTask);
-        goalRepository.save(Goal);
+        
+        // Add task to goal and update goal status
+        goal.getTasks().add(goalTask);
+        if (goal.getStatus() == GoalStatus.COMPLETED) {
+            goal.setStatus(GoalStatus.IN_PROGRESS);
+            goal.setCompletedAt(null);
+        }
+        goalRepository.save(goal);
+        
+        // Update project status
+        Project project = projectRepository.findByGoalId(goal.getId());
+        if (project != null && project.getStatus() == ProjectStatus.COMPLETED) {
+            project.setStatus(ProjectStatus.IN_PROGRESS);
+            project.setCompletedAt(null);
+            projectRepository.save(project);
+        }
     }
 
     public void updateProject(ProjectDTO projectDTO) {
@@ -133,13 +163,42 @@ public class ProjectService {
         taskRepository.save(goalTask);
     }
 
+    @Transactional
     public void finishTask(UUID id) {
+        // Find and update the task
         Task goalTask = taskRepository.findById(id).orElseThrow();
-        Goal Goal = goalRepository.findByTaskId(id);
         goalTask.markComplete();
-        Goal.updateStatus();
         taskRepository.save(goalTask);
-        goalRepository.save(Goal);
+
+        // Find and update the goal
+        Goal goal = goalRepository.findByTaskId(id);
+        goal.updateStatus();
+        goalRepository.save(goal);
+
+        // Find and update the project
+        Project project = projectRepository.findByGoalId(goal.getId());
+        updateProjectStatus(project);
+        projectRepository.save(project);
+    }
+
+    private void updateProjectStatus(Project project) {
+        if ( project.getGoals() == null || project.getGoals().isEmpty()) {
+            project.setStatus(ProjectStatus.NOT_STARTED);
+            return;
+        }
+
+        boolean allGoalsCompleted = project.getGoals().stream()
+                .allMatch(goal -> goal.getStatus() == GoalStatus.COMPLETED);
+
+        boolean anyGoalInProgress = project.getGoals().stream()
+                .anyMatch(goal -> goal.getStatus() == GoalStatus.IN_PROGRESS);
+
+        if (allGoalsCompleted) {
+            project.setStatus(ProjectStatus.COMPLETED);
+            project.setCompletedAt(LocalDateTime.now());
+        } else if (anyGoalInProgress || project.getStatus() == ProjectStatus.NOT_STARTED) {
+            project.setStatus(ProjectStatus.IN_PROGRESS);
+        }
     }
 
     public void deleteProject(UUID id) {
