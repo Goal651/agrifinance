@@ -1,10 +1,10 @@
+import { useProject } from '@/contexts/ProjectContext';
+import { useProjectAction } from '@/hooks/useProjectAction';
+import { Task, TaskCreateRequest } from '@/types';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { useProjectAction } from '@/hooks/useProjectAction';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Task, TaskCreateRequest } from '@/types';
-import { useProject } from '@/contexts/ProjectContext';
+import { Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const statusColors = {
   NOT_STARTED: 'bg-orange-500',
@@ -108,6 +108,8 @@ const CreateTaskModal = ({ visible, onClose, goalId, onCreate }: {
   );
 };
 
+
+
 export default function GoalView() {
   const { createTask, finishTask } = useProjectAction();
   const [isCreateTaskModalVisible, setIsCreateTaskModalVisible] = useState(false);
@@ -158,6 +160,7 @@ export default function GoalView() {
       />
 
       <ScrollView className="flex-1 p-4">
+        {/* Goal Details */}
         <View className="bg-white rounded-xl p-4 mb-4 shadow-sm">
           <View className="flex-row items-center mb-3">
             <View className={`w-3 h-3 rounded-full ${statusColors[currentGoal.status] || 'bg-gray-400'} mr-2`} />
@@ -171,6 +174,7 @@ export default function GoalView() {
           </Text>
         </View>
 
+        {/* Tasks Section */}
         <View className="bg-white rounded-xl p-4 shadow-sm">
           <View className="flex-row justify-between items-center mb-4">
             <Text className="text-lg font-semibold text-gray-900">Tasks</Text>
@@ -179,6 +183,7 @@ export default function GoalView() {
             </Text>
           </View>
 
+          {/* Tasks List */}
           {currentGoal.tasks?.length > 0 ? (
             <View className="space-y-3">
               {currentGoal.tasks?.map((task: Task, taskIndex: number) => (
@@ -188,6 +193,11 @@ export default function GoalView() {
                     {task.description && (
                       <Text className="text-gray-500 text-sm">{task.description}</Text>
                     )}
+                    {task.worker && (
+                      <View className="mt-2">
+                        <Text className="text-gray-500 text-sm">Worker: {task.worker.names}</Text>
+                      </View>
+                    )}
                   </View>
                   <TouchableOpacity
                     className="p-1"
@@ -196,13 +206,13 @@ export default function GoalView() {
                         const updatedTasks = [...currentGoal.tasks];
                         updatedTasks[taskIndex] = {
                           ...task,
-                          status:'COMPLETED'
+                          status: 'COMPLETED',
                         };
                         setCurrentGoal({
                           ...currentGoal,
-                          tasks: updatedTasks
+                          tasks: updatedTasks,
                         });
-                        finishTask(task.id)
+                        finishTask(task.id);
                       }
                     }}
                   >
@@ -229,6 +239,8 @@ export default function GoalView() {
             </View>
           )}
         </View>
+
+
       </ScrollView>
 
       {currentGoal.tasks?.length > 0 && (

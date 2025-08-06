@@ -12,7 +12,7 @@ export default function ProjectAnalytics() {
   const stats = {
     onTime: 75,
     total: 14,
-    completed: 6,
+    completed: 6,          
     inProgress: 3,
     mostActive: { name: 'Maize Season 2025', percent: 65 },
     upcoming: { goal: 'Fertilizer application', date: 'Aug 15' },

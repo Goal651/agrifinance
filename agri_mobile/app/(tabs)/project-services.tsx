@@ -1,27 +1,17 @@
+import { useProject } from '@/contexts/ProjectContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import ProjectAnalytics from './ProjectAnalytics';
-import { useProject } from '@/contexts/ProjectContext';
-import { Goal, Project } from '@/types/project';
 
-const projectDash = {
-  active: 0,
-  total: 0,
-  completed: 0,
-  activeProjects: [],
-};
-
-const setCurrentProject = (project: Project) => {
-  console.log('Setting current project:', project);
-};
 
 export default function ProjectServices() {
-  const { projects } = useProject();
+  const { projects, projectDash, setCurrentProject, workers } = useProject();
   const [activeTab, setActiveTab] = useState('overview');
   const [goalFilter, setGoalFilter] = useState('all');
   const router = useRouter();
+
 
   return (
     <View className="flex-1 bg-gradient-to-b from-gray-50 to-gray-100">
@@ -48,9 +38,9 @@ export default function ProjectServices() {
           <MaterialIcons name="folder-open" size={28} color={activeTab === 'projects' ? '#2563eb' : '#6b7280'} />
           <Text className={activeTab === 'projects' ? 'text-blue-700 font-semibold text-sm mt-1' : 'text-gray-500 text-sm mt-1'}>Projects</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="flex-1 items-center py-3 flex-col" style={activeTab === 'goals' ? { borderBottomWidth: 2, borderBottomColor: '#2563eb' } : {}} onPress={() => setActiveTab('goals')}>
-          <MaterialIcons name="flag" size={28} color={activeTab === 'goals' ? '#2563eb' : '#6b7280'} />
-          <Text className={activeTab === 'goals' ? 'text-blue-700 font-semibold text-sm mt-1' : 'text-gray-500 text-sm mt-1'}>Goals</Text>
+        <TouchableOpacity className="flex-1 items-center py-3 flex-col" style={activeTab === 'workers' ? { borderBottomWidth: 2, borderBottomColor: '#2563eb' } : {}} onPress={() => setActiveTab('workers')}>
+          <MaterialIcons name="group" size={28} color={activeTab === 'workers' ? '#2563eb' : '#6b7280'} />
+          <Text className={activeTab === 'workers' ? 'text-blue-700 font-semibold text-sm mt-1' : 'text-gray-500 text-sm mt-1'}>Workers</Text>
         </TouchableOpacity>
         <TouchableOpacity className="flex-1 items-center py-3 flex-col" style={activeTab === 'analytics' ? { borderBottomWidth: 2, borderBottomColor: '#2563eb' } : {}} onPress={() => setActiveTab('analytics')}>
           <MaterialIcons name="bar-chart" size={28} color={activeTab === 'analytics' ? '#2563eb' : '#6b7280'} />
@@ -66,35 +56,27 @@ export default function ProjectServices() {
               <Text className="text-gray-500 mb-3">Manage and track your agricultural projects</Text>
               <View className="space-y-4">
                 {projects?.map((project) => (
-                  <View key={project.id} className="bg-white rounded-xl shadow-lg p-4">
-                    <View className="flex-row justify-between items-start">
-                      <View>
-                        <Text className="text-lg font-bold mb-2">{project.name}</Text>
-                        <Text className="text-gray-600 mb-2">{project.description || 'No description'}</Text>
-                        <View className="space-y-2">
-                          <Text className="text-gray-500 text-sm">Status: {project.status}</Text>
-                          <Text className="text-gray-500 text-sm">Start Date: {project.createdAt ? new Date(project.createdAt).toLocaleDateString() : 'N/A'}</Text>
-                          <Text className="text-gray-500 text-sm">Number of Goals: {project.goals?.length || 0}</Text>
-                          <Text className="text-gray-500 text-sm">Number of Tasks: {project.tasks?.length || 0}</Text>
-
-                          {/* Goals Section */}
-                          <Text className="text-sm font-semibold text-gray-700 mt-3">Goals ({project.goals?.length || 0})</Text>
-                          {project.goals?.map((goal: Goal) => (
-                            <View key={goal.id} className="mt-2">
-                              <View className="flex-row items-center mb-1">
-                                {goal.status === 'COMPLETED' ? (
-                                  <MaterialIcons name="check-circle" size={16} color="#22c55e" className="mr-2" />
-                                ) : (
-                                  <MaterialIcons name="radio-button-unchecked" size={16} color="#f59e42" className="mr-2" />
-                                )}
-                                <Text className="text-base font-medium">{goal.name}</Text>
-                              </View>
-                            </View>
-                          ))}
-                        </View>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setCurrentProject(project)
+                      router.push(`/(tabs)/ProjectView`)
+                    }}
+                    key={project.id} className="bg-white rounded-xl shadow-lg p-4 flex-row items-center">
+                    <MaterialIcons
+                      name={project.status === 'COMPLETED' ? 'check-circle' : 'radio-button-unchecked'}
+                      size={24}
+                      color={project.status === 'COMPLETED' ? '#10b981' : '#9ca3af'}
+                      className="mr-3"
+                    />
+                    <View className="flex-1">
+                      <Text className="text-lg font-bold mb-1">{project.name}</Text>
+                      <Text className="text-gray-600 mb-2">{project.description || 'No description'}</Text>
+                      <View className="space-y-1">
+                        <Text className="text-gray-500 text-sm">Number of Goals: {project.goals?.length || 0}</Text>
+                        <Text className="text-gray-500 text-sm">Number of Tasks: {project.tasks?.length || 0}</Text>
                       </View>
                     </View>
-                  </View>
+                  </TouchableOpacity>
                 ))}
               </View>
             </View>
@@ -167,53 +149,24 @@ export default function ProjectServices() {
         </ScrollView>
       )}
 
-      {activeTab === 'goals' && (
+      {activeTab === 'workers' && (
         <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 80 }} showsVerticalScrollIndicator={true}>
           <View className="px-3 pt-5">
             <Text className="text-xl font-bold mb-1">Manage your agricultural projects</Text>
-            {/* Filter Buttons */}
-            <View className="flex-row bg-purple-50 rounded-xl p-2 mb-3">
-              <TouchableOpacity
-                className={`flex-1 items-center py-2 rounded-lg mr-2 ${goalFilter === 'all' ? 'bg-purple-200' : ''}`}
-                onPress={() => setGoalFilter('all')}
-              >
-                <Text className={`font-semibold ${goalFilter === 'all' ? 'text-purple-900' : 'text-gray-700'}`}>All Goals</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                className={`flex-1 items-center py-2 rounded-lg mr-2 ${goalFilter === 'done' ? 'bg-purple-200' : ''}`}
-                onPress={() => setGoalFilter('done')}
-              >
-                <Text className={`font-semibold ${goalFilter === 'done' ? 'text-purple-900' : 'text-gray-700'}`}>Completed</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                className={`flex-1 items-center py-2 rounded-lg ${goalFilter === 'active' ? 'bg-purple-200' : ''}`}
-                onPress={() => setGoalFilter('active')}
-              >
-                <Text className={`font-semibold ${goalFilter === 'active' ? 'text-purple-900' : 'text-gray-700'}`}>In Progress</Text>
-              </TouchableOpacity>
-            </View>
-            {/* Goals Table */}
+            {/* Workers Table */}
             <View className="bg-white rounded-xl shadow p-2 mb-4 border border-gray-100">
               <View className="flex-row px-2 py-2 border-b border-gray-200">
-                <Text className="w-2/6 text-xs font-semibold text-gray-500">Goal</Text>
-                <Text className="w-2/6 text-xs font-semibold text-gray-500">Project</Text>
+                <Text className="w-2/6 text-xs font-semibold text-gray-500">Worker</Text>
+                <Text className="w-2/6 text-xs font-semibold text-gray-500">Role</Text>
                 <Text className="w-1/6 text-xs font-semibold text-gray-500">Status</Text>
               </View>
-              {projects.flatMap(project =>
-                (project.goals || [])
-                  .filter(g =>
-                    goalFilter === 'all' ? true :
-                      goalFilter === 'done' ? g.status === 'COMPLETED' :
-                        goalFilter === 'active' ? g.status === 'IN_PROGRESS' : true
-                  )
-                  .map((g, idx) => (
-                    <View key={g.id || g.name + project.id} className="flex-row items-center px-2 py-2 border-b border-gray-100 last:border-b-0">
-                      <Text className="w-2/6 text-gray-800" numberOfLines={1}>{g.name}</Text>
-                      <Text className="w-2/6 text-gray-800" numberOfLines={1}>{project.name}</Text>
-                      <Text className="w-1/6 text-gray-800 text-xs">{g.status}</Text>
-                    </View>
-                  ))
-              )}
+              {workers.map((worker, idx) => (
+                <View key={worker.id || idx} className="flex-row items-center px-2 py-2 border-b border-gray-100 last:border-b-0">
+                  <Text className="w-2/6 text-gray-800" numberOfLines={1}>{worker.names}</Text>
+                  <Text className="w-2/6 text-gray-800" numberOfLines={1}>{worker.email}</Text>
+                  <Text className="w-1/6 text-gray-800 text-xs">{worker.phoneNumber}</Text>
+                </View>
+              ))}
             </View>
           </View>
         </ScrollView>

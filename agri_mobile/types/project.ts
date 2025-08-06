@@ -1,6 +1,7 @@
 import { User } from './user';
+import { Worker } from './worker';
 
-export type ProjectStatus = 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'NOT_STARTED'|'COMPLETED'|'IN_PROGRESS';
+export type ProjectStatus =  'NOT_STARTED'|'COMPLETED'|'IN_PROGRESS';
 export type TaskStatus = 'COMPLETED' | 'NOT_COMPLETED';
 export type GoalStatus = 'COMPLETED' | 'NOT_STARTED' | 'IN_PROGRESS';
 

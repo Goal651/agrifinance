@@ -1,5 +1,7 @@
 import { projectService } from '@/api/project';
+import { workerService } from '@/api/worker';
 import { Goal, Project, ProjectDash, Task } from '@/types';
+import { Worker } from '@/types/worker';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import Toast from 'react-native-toast-message';
 
@@ -11,6 +13,7 @@ interface ProjectContextType {
     loading: boolean;
     currentGoal:Goal|null
     currentTask:Task|null
+    workers: Worker[]
     setCurrentProject: (project: Project) => void
     setCurrentGoal: (goal: Goal) => void
     setCurrentTask: (task: Task) => void
@@ -33,6 +36,9 @@ function ProjectProvider({ children }: { children: React.ReactNode }) {
     const [currentProject, setCurrentProject] = useState<Project | null>(null)
     const [currentGoal, setCurrentGoal] = useState<Goal | null>(null)
     const [currentTask, setCurrentTask] = useState<Task | null>(null)
+    const [workers,setWorkers] = useState<Worker[]>([])
+
+    
 
 
     // Load auth state from storage
@@ -45,7 +51,7 @@ function ProjectProvider({ children }: { children: React.ReactNode }) {
                 else Toast.show({ type: 'error', text1: 'Failed to load analytics', text2: res.message });
             } catch (e) {
 
-                Toast.show({ type: 'error', text1: 'Error', text2: e?.message || 'Unknown error' });
+                Toast.show({ type: 'error', text1: 'Error', text2: 'Unknown error' });
             } finally {
                 setLoading(false);
             }
@@ -59,11 +65,26 @@ function ProjectProvider({ children }: { children: React.ReactNode }) {
                 else Toast.show({ type: 'error', text1: 'Failed to load analytics', text2: res.message });
             } catch (e) {
 
-                Toast.show({ type: 'error', text1: 'Error', text2: e?.message || 'Unknown error' });
+                Toast.show({ type: 'error', text1: 'Error', text2: 'Unknown error' });
             } finally {
                 setLoading(false);
             }
         }
+
+        async function loadWorkers() {
+            setLoading(true)
+            try {
+                const res = await workerService.getWorkers();
+                if (res.success) setWorkers(res.data);
+                else Toast.show({ type: 'error', text1: 'Failed to load workers', text2: res.message });
+            } catch (e) {
+
+                Toast.show({ type: 'error', text1: 'Error', text2: 'Unknown error' });
+            } finally {
+                setLoading(false);
+            }
+        }
+        loadWorkers()
         loadProjects()
         loadDashboardData()
     }, [])
@@ -81,6 +102,7 @@ function ProjectProvider({ children }: { children: React.ReactNode }) {
             setCurrentGoal,
             setCurrentTask,
             setCurrentProject,
+            workers
             
         }}>
 
