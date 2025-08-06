@@ -2,6 +2,8 @@ package com.agrifinance.backend.model.loan;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.agrifinance.backend.model.enums.LoanTermType;
@@ -24,4 +26,6 @@ public class LoanProduct {
 
     @Enumerated(EnumType.STRING)
     private LoanTermType termType;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

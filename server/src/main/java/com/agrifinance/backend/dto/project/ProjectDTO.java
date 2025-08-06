@@ -14,7 +14,7 @@ public class ProjectDTO {
     private String name;
     private String description;
     private ProjectStatus status;
-    private List<ProjectGoalDTO> goals;
+    private List<GoalDTO> goals;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime targetDate;

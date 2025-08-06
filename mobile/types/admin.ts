@@ -1,4 +1,6 @@
 import { LoanStatus, Loan } from "./loan"
+import { Project } from "./project"
+import { User, UserRole, UserStatus } from "./user"
 
 export interface Summary {
     label: 'Users' | 'Loans' | 'Projects'
@@ -12,44 +14,33 @@ export interface LoanStats {
     total: number
     rejected: number
     status: {
-        label: LoanStatus
+        label: string
         value: number
-        color: 'bg-yellow-400' | 'bg-green-500' | 'bg-red-500'
+        color: 'bg-yellow-400' | 'bg-green-500' | 'bg-red-500' | 'bg-blue-400' | 'bg-orange-500' | 'bg-red-700' | 'bg-green-300'
     }[]
 }
 
-export interface UserRole {
-    id: string
-    name: 'admin' | 'loan_officer' | 'farmer' | 'viewer'
-    permissions: string[]
-}
-
-export interface UserAdmin {
-    id: string
-    firstName: string
-    lastName: string
-    email: string
-    phone?: string
-    role: UserRole
-    status: 'active' | 'inactive' | 'suspended'
+export interface UserAdmin extends User {
     lastLogin?: string
     createdAt: string
     updatedAt: string
 }
 
-export interface CreateUserInput {
+export interface AdminProject extends Project {
+    progress: number
+}
+
+export interface CreateUser {
     firstName: string
     lastName: string
     email: string
-    phone?: string
-    roleId: string
-    password?: string
-    sendInvite?: boolean
+    password: string
+    role: UserRole
 }
 
-export interface UpdateUserInput extends Partial<CreateUserInput> {
+export interface UpdateUserInput extends CreateUser {
     id: string
-    status?: 'active' | 'inactive' | 'suspended'
+    status?: UserStatus
 }
 
 export interface LoanApproval {
@@ -97,6 +88,18 @@ export interface PaginatedResult<T> {
     totalPages: number
 }
 
+export interface AdminProjectStats {
+    totalProjects: number
+    activeProjects: number
+    completedProjects: number
+    totalFunding: number
+    avgCompletionTime: number
+    projectsByStatus: {
+        status: string
+        count: number
+    }[]
+}
+
 export interface AdminDashboardStats {
     totalUsers: number
     activeUsers: number
@@ -113,10 +116,11 @@ export interface AdminDashboardStats {
     }[]
     recentActivities: {
         id: string
-        type: 'user_created' | 'loan_approved' | 'loan_rejected' | 'payment_received'
+        type: 'login' | 'loan_application' | 'payment' | 'profile_update'
         description: string
-        timestamp: string
+        userId: string
         user?: Pick<UserAdmin, 'id' | 'firstName' | 'lastName' | 'email'>
-        loan?: Pick<Loan, 'id' | 'loanNumber' | 'amount'>
-    }[]
+        metadata?: Record<string, unknown>
+        createdAt: string
+    }[][]
 }

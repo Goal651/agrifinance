@@ -2,14 +2,15 @@ package com.agrifinance.backend.dto.loan;
 
 import lombok.Data;
 import java.time.LocalDateTime;
-import java.util.UUID;
+
+import com.agrifinance.backend.model.enums.PaymentStatus;
 
 @Data
 public class LoanPaymentDTO {
-    private UUID id;
+    private String id;
     private Double amount;
     private LocalDateTime dueDate;
     private LocalDateTime paidDate;
-    private String status;
+    private PaymentStatus status;
     private LoanDTO loan;
 }

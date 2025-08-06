@@ -1,22 +1,26 @@
 {
   "expo": {
-    "name": "agrifinance",
+    "name": "AgriFinance",
     "slug": "agrifinance",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/hacker.jpg",
     "scheme": "agrifinance",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "userInterfaceStyle": "light",
+    "description": "Modern agricultural finance management app with glassmorphism UI",
+    "primaryColor": "#22c55e",
+    "backgroundColor": "#f8fafc",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.agrifinance"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/hacker.jpg",
         "backgroundColor": "#000000"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.agrifinance"
     },
     "web": {
       "bundler": "metro",
@@ -31,9 +35,12 @@
           "image": "./assets/images/hacker.jpg",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#000000"
+          "backgroundColor": "#f8fafc"
         }
       ]
+    ],
+    "assetBundlePatterns": [
+      "**/*"
     ],
     "experiments": {
       "typedRoutes": true

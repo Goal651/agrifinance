@@ -1,39 +1,70 @@
 package com.agrifinance.backend.service.user;
 
+import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.agrifinance.backend.dto.user.UserDTO;
+import com.agrifinance.backend.exception.UserNotFoundException;
+import com.agrifinance.backend.mapper.user.UserMapper;
 import com.agrifinance.backend.model.user.User;
 import com.agrifinance.backend.repository.UserRepository;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class UserService {
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
+
+    public Optional<User> findUserById(UUID id) {
+        return userRepository.findById(id);
+    }
 
     public User getUserById(UUID id) {
-        User user = userRepository.findById(id).orElseThrow();
-        return user;
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+    }
+
+    public UserDTO getUserDtoById(UUID id) {
+        User user = getUserById(id);
+        return userMapper.toDTO(user);
+    }
+
+    public Optional<User> findUserByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
     public User getUserByEmail(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow();
-        return user;
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
     }
 
     public User saveUser(User user) {
         return userRepository.save(user);
     }
 
-    public User updateUser(UserDTO newUser) {
-        User oldUser = userRepository.findById(newUser.getId()).orElseThrow();
-        oldUser.setEmail(newUser.getEmail());
-        oldUser.setFirstName(newUser.getFirstName());
-        oldUser.setLastName(newUser.getLastName());
-        return userRepository.save(oldUser);
+    public UserDTO saveUserDto(User user) {
+        User savedUser = saveUser(user);
+        return userMapper.toDTO(savedUser);
     }
 
+    public User updateUser(User user) {
+        if (!userRepository.existsById(user.getId())) {
+            throw new UserNotFoundException("User not found with id: " + user.getId());
+        }
+        return userRepository.save(user);
+    }
+
+    public UserDTO updateUser(UserDTO userDTO) {
+        User existingUser = getUserById(userDTO.getId());
+        existingUser.setEmail(userDTO.getEmail());
+        existingUser.setFirstName(userDTO.getFirstName());
+        existingUser.setLastName(userDTO.getLastName());
+        
+        User updatedUser = userRepository.save(existingUser);
+        return userMapper.toDTO(updatedUser);
+    }
 }

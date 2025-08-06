@@ -33,13 +33,13 @@ public class Project {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private User user;
 
     @OneToMany( cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "project_id") 
-    private List<ProjectGoal> goals;
+    private List<Goal> goals;
 
     @PrePersist
     protected void onCreate() {

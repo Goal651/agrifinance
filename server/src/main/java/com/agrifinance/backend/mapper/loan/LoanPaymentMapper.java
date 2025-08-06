@@ -10,11 +10,9 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface LoanPaymentMapper { 
     LoanPaymentDTO toDTO(LoanPayment loanPayment);
-
     LoanPayment toEntity(LoanPaymentDTO loanPaymentDTO);
 
     List<LoanPaymentDTO> toDTOs(List<LoanPayment> loanPayments);
-
     List<LoanPayment> toEntities(List<LoanPaymentDTO> loanPaymentDTOs);
 
 }

@@ -36,7 +36,7 @@ public interface LoanRepository extends JpaRepository<Loan, UUID>, JpaSpecificat
         @Param("endDate") LocalDateTime endDate
     );
     
-    @Query("SELECT COALESCE(SUM(l.details.amount), 0) FROM Loan l WHERE l.status = com.agrifinance.backend.model.enums.LoanStatus.APPROVED")
+    @Query("SELECT COALESCE(SUM(l.details.amount), 0) FROM Loan l WHERE l.status = LoanStatus.APPROVED")
     Double getTotalApprovedLoanAmount();
     
     @Query("SELECT COUNT(l) FROM Loan l WHERE l.status = :status")

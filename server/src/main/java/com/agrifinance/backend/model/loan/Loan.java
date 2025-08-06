@@ -9,8 +9,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -29,7 +27,7 @@ public class Loan {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private User user;
 
@@ -38,7 +36,7 @@ public class Loan {
     @Enumerated(EnumType.STRING)
     private LoanStatus status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "loan_product_id")
     private LoanProduct details;
 
@@ -46,10 +44,6 @@ public class Loan {
     private LoanInfo info;
 
     private Double paidAmount;
-    
-    @OneToMany(mappedBy = "loan", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<LoanPayment> payments = new ArrayList<>();
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

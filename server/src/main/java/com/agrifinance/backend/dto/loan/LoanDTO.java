@@ -8,11 +8,10 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Data
 public class LoanDTO {
-    private UUID id;
+    private String id;
     private UserDTO user;
     private String purpose;
     private LoanStatus status;

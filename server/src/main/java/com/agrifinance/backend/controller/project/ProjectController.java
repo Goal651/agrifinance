@@ -3,12 +3,14 @@ package com.agrifinance.backend.controller.project;
 import com.agrifinance.backend.dto.common.ApiResponse;
 import com.agrifinance.backend.dto.project.GoalRequest;
 import com.agrifinance.backend.dto.project.ProjectDTO;
+import com.agrifinance.backend.dto.project.ProjectDashboardDTO;
 import com.agrifinance.backend.dto.project.ProjectRequest;
 import com.agrifinance.backend.dto.project.TaskRequest;
 import com.agrifinance.backend.model.user.User;
 import com.agrifinance.backend.service.project.ProjectService;
 import com.agrifinance.backend.service.user.UserService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +36,15 @@ public class ProjectController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @GetMapping("/dashboard")
+    public ResponseEntity<ApiResponse<ProjectDashboardDTO>> getProjectDash(Principal principal) {
+        User user = userService.getUserByEmail(principal.getName());
+        ProjectDashboardDTO dashboardDTO = projectService.getProjectDash(user.getId());
+        ApiResponse<ProjectDashboardDTO> apiResponse = new ApiResponse<>(true, dashboardDTO,
+                "Project loaded successfully");
+        return ResponseEntity.ok(apiResponse);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ProjectDTO>> getProjectById(@PathVariable String id) {
         if (id == null || id.isEmpty()) {
@@ -45,7 +56,7 @@ public class ProjectController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<ProjectDTO>> createProject(@RequestBody ProjectRequest projectDTO,
+    public ResponseEntity<ApiResponse<ProjectDTO>> createProject(@Valid @RequestBody ProjectRequest projectDTO,
             Principal principal) {
         System.out.println(projectDTO);
         ProjectDTO savedProjectDTO = projectService.createNewProject(projectDTO, principal.getName());
@@ -54,16 +65,23 @@ public class ProjectController {
     }
 
     @PostMapping("/goal")
-    public ResponseEntity<ApiResponse<ProjectDTO>> createProjectGoal(@RequestBody GoalRequest goalRequest) {
+    public ResponseEntity<ApiResponse<ProjectDTO>> createProjectGoal(@Valid @RequestBody GoalRequest goalRequest) {
         ProjectDTO savedProjectDTO = projectService.createNewGoal(goalRequest);
         ApiResponse<ProjectDTO> apiResponse = new ApiResponse<>(true, savedProjectDTO, "Project created successfully");
         return ResponseEntity.ok(apiResponse);
     }
 
     @PostMapping("/task")
-    public ResponseEntity<ApiResponse<Void>> createGoalTask(@RequestBody TaskRequest taskRequest) {
+    public ResponseEntity<ApiResponse<Void>> createGoalTask(@Valid @RequestBody TaskRequest taskRequest) {
         projectService.createNewTask(taskRequest);
         ApiResponse<Void> apiResponse = new ApiResponse<>(true, null, "Project created successfully");
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @PutMapping("/task/done/{id}")
+    public ResponseEntity<ApiResponse<Void>> completeTask(@PathVariable String id) {
+        projectService.finishTask(UUID.fromString(id));
+        ApiResponse<Void> apiResponse = new ApiResponse<>(true, null, "Task completed successfully");
         return ResponseEntity.ok(apiResponse);
     }
 

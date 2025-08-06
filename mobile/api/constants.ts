@@ -10,34 +10,19 @@ export const API_CONFIG = {
 export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: '/auth/login',
-    SIGNUP: '/auth/signup',
     LOGOUT: '/auth/logout',
-    REFRESH: '/auth/refresh',
-    VERIFY_USER: '/auth/check-user',
-    FORGOT_PASSWORD: '/auth/forgot-password',
-    RESET_PASSWORD: '/auth/reset-password',
-  },
-  USER: {
-    ALL: '/user/all',
-    PROFILE: (fileName: string) => `/profile/${fileName}`,
-    UPDATE_PROFILE: (id: number) => `/user/profile/${id}`,
-    GET_DATA: '/user',
-    UPLOAD_AVATAR: '/upload/user',
-    BY_ID: (id: number | string) => `/user/${id}`,
-    UPDATE: '/user',
-    EXPORT: '/user/export',
-    DELETE: '/user'
   },
   LOAN: {
-    HISTORY: '/loans/history',
+    ALL: '/loans',
     CURRENT: '/loans/current',
     APPLY: '/loans/apply',
     PRODUCT: `/loan-products`,
     ANALYTICS: `/loans/analytics`,
-    PAYMENTS: '/loans/payments',
+    PAYMENT: '/loans/payment',
   },
   PROJECT: {
-    LIST: '/projects',
+    ALL: '/projects',
+    DASHBOARD: '/projects/dashboard',
     CREATE: '/projects',
     BY_ID: (id: string | number) => `/projects/${id}`,
     UPDATE: (id: string | number) => `/projects/${id}`,
@@ -46,40 +31,55 @@ export const API_ENDPOINTS = {
     GOAL: {
       CREATE: '/projects/goal',
     },
-    TASK:{
-      CREATE:'projects/task'
+    TASK: {
+      CREATE: 'projects/task',
+      DONE: (id: string) => `projects/task/done/${id}`
     }
+  }, // Worker Management
+  WORKERS: {
+    ALL: '/workers',
+    CREATE: '/workers',
+    BY_ID: (id: string) => `workers/${id}`,
+    UPDATE: (id: string) => `/workers/${id}`,
+    DELETE: (id: string) => `/workers/${id}`,
   },
 
   ADMIN: {
     // User Management
     USER: {
-      BASE: '/admin/users',
       ALL: '/admin/users',
       CREATE: '/admin/users',
-      ROLES: '/admin/roles',
-    },
-
-    // Role Management
-    ROLE: {
-      ALL: '/admin/roles',
-      PERMISSIONS: '/admin/roles/permissions',
     },
 
     // Loan Management
     LOAN: {
-      BASE: '/admin/loans',
       ALL: '/admin/loans',
-      APPROVE: '/admin/loans/approve',
-      REJECT: '/admin/loans/reject',
+      APPROVE: (id: string) => `/admin/loans/approve/${id}`,
+      REJECT: (id: string) => `/admin/loans/reject/${id}`,
       STATS: '/admin/loans/stats',
+      APPROVED:`/admin/loans/approved`,
+      UNAPPROVED: '/admin/loans/unapproved',
+      UPDATE_STATUS: (id: string) => `/admin/loans/update-status/${id}`,
+      BY_ID:(id:string)=>`/admin/loans/${id}`
     },
+
+    // Loan Product Management
+    LOAN_PRODUCT: {
+      ALL: '/admin/loan-products',
+      BY_ID: (id: string) => `/admin/loan-products/${id}`,
+      CREATE: '/admin/loan-products',
+      UPDATE: (id: string) => `/admin/loan-products/${id}`,
+      DELETE: (id: string) => `/admin/loan-products/${id}`,
+    },
+
+
 
     // Project Management
     PROJECT: {
-      BASE: '/admin/projects',
       ALL: '/admin/projects',
       ANALYTICS: '/admin/projects/analytics',
+      BY_ID: (id: string) => `/admin/projects/${id}`,
+      STATS: '/admin/projects/stats',
     },
 
     // Dashboard
@@ -99,4 +99,4 @@ export const HTTP_STATUS = {
   FORBIDDEN: 403,
   NOT_FOUND: 404,
   INTERNAL_SERVER_ERROR: 500,
-};
+}

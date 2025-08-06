@@ -3,6 +3,9 @@ package com.agrifinance.backend.exception;
 import com.agrifinance.backend.dto.common.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -15,32 +18,70 @@ import java.util.Map;
 public class GlobalExceptionHandler {
     
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiResponse<?>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
-        return ResponseEntity.badRequest()
-                .body(new ApiResponse<>(false, errors, "Validation failed"));
+        return ResponseEntity.ok(new ApiResponse<>(false, errors, "Validation failed"));
     }
     
-    @ExceptionHandler({org.springframework.security.access.AccessDeniedException.class})
-    public ResponseEntity<?> handleAccessDenied(Exception ex) {
-        ErrorResponse error = new ErrorResponse(403, "Forbidden", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ApiResponse<>(false, null, "Access Denied: " + ex.getMessage()));
     }
 
-    @ExceptionHandler({org.springframework.security.core.userdetails.UsernameNotFoundException.class})
-    public ResponseEntity<?> handleUserNotFound(Exception ex) {
-        ErrorResponse error = new ErrorResponse(404, "Not Found", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAuthenticationException(AuthenticationException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ApiResponse<>(false, null, "Authentication failed: " + ex.getMessage()));
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUsernameNotFound(UsernameNotFoundException ex) {
+        return ResponseEntity.ok(new ApiResponse<>(false, null, ex.getMessage()));
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUserNotFound(UserNotFoundException ex) {
+        return ResponseEntity.ok(new ApiResponse<>(false, null, "User not found: " + ex.getMessage()));
+    }
+
+    @ExceptionHandler(ProjectNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleProjectNotFound(ProjectNotFoundException ex) {
+        return ResponseEntity.ok(new ApiResponse<>(false, null, "Project not found: " + ex.getMessage()));
+    }
+
+    @ExceptionHandler(GoalNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleGoalNotFound(GoalNotFoundException ex) {
+        return ResponseEntity.ok(new ApiResponse<>(false, null, "Goal not found: " + ex.getMessage()));
+    }
+
+    @ExceptionHandler(TaskNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTaskNotFound(TaskNotFoundException ex) {
+        return ResponseEntity.ok(new ApiResponse<>(false, null, "Task not found: " + ex.getMessage()));
+    }
+
+    @ExceptionHandler(LoanNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleLoanNotFound(LoanNotFoundException ex) {
+        return ResponseEntity.ok(new ApiResponse<>(false, null, "Loan not found: " + ex.getMessage()));
+    }
+
+    @ExceptionHandler(LoanProductNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleLoanProductNotFound(LoanProductNotFoundException ex) {
+        return ResponseEntity.ok(new ApiResponse<>(false, null, "Loan product not found: " + ex.getMessage()));
+    }
+
+    @ExceptionHandler(SystemException.class)
+    public ResponseEntity<ApiResponse<Void>> handleSystemException(SystemException ex) {
+        return ResponseEntity.ok(new ApiResponse<>(false, null, "System error: " + ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleGeneric(Exception ex) {
-        ErrorResponse error = new ErrorResponse(500, "Internal Server Error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
+        return ResponseEntity.ok(new ApiResponse<>(false, null, "An unexpected error occurred: " + ex.getMessage()));
     }
 }

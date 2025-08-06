@@ -5,6 +5,8 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.agrifinance.backend.model.enums.PaymentStatus;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -22,5 +24,6 @@ public class LoanPayment {
     private Double amount;
     private LocalDateTime dueDate;
     private LocalDateTime paidDate;
-    private String status; // e.g., PENDING, PAID, OVERDUE
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus status;
 }

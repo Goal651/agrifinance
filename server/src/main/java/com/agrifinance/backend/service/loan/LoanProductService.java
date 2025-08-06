@@ -1,29 +1,34 @@
 package com.agrifinance.backend.service.loan;
 
+import com.agrifinance.backend.dto.loan.LoanProductDTO;
+import com.agrifinance.backend.mapper.loan.LoanProductMapper;
 import com.agrifinance.backend.model.loan.LoanProduct;
 import com.agrifinance.backend.repository.LoanProductRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class LoanProductService {
-    @Autowired
-    private LoanProductRepository loanProductRepository;
+    private final LoanProductRepository loanProductRepository;
+    private final LoanProductMapper loanProductMapper;
 
-    public List<LoanProduct> getAllLoanProducts() {
-        return loanProductRepository.findAll();
+    public List<LoanProductDTO> getAllLoanProducts() {
+        return loanProductMapper.toDTOs(loanProductRepository.findAll());
     }
 
-    public Optional<LoanProduct> getLoanProductById(UUID id) {
-        return loanProductRepository.findById(id);
+    public LoanProductDTO getLoanProductById(UUID id) {
+        return loanProductMapper.toDTO(loanProductRepository.findById(id).orElseThrow());
     }
 
-    public LoanProduct createLoanProduct(LoanProduct loanProduct) {
-        return loanProductRepository.save(loanProduct);
+    public LoanProductDTO createLoanProduct(LoanProductDTO loanProduct) {
+        LoanProduct result = loanProductMapper.toEntity(loanProduct);
+        return loanProductMapper.toDTO(loanProductRepository.save(result));
     }
 
     public void deleteLoanProduct(UUID id) {
