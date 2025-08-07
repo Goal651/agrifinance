@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "AgriFinance ",
-    "slug": "1c38eb2-10a2-4222-9305-9a8083c487ff",
+    "slug": "agri_mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -19,7 +19,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.anonymous.agri_mobile"
-    }, 
+    },
     "web": {
       "bundler": "metro",
       "output": "static",
