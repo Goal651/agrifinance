@@ -4,6 +4,13 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "local": {
+      "android": {
+        "buildType": "apk"
+      },
+      "developmentClient": true,
+      "distribution": "internal"
+    },
     "development": {
       "developmentClient": true,
       "distribution": "internal"
@@ -12,6 +19,9 @@
       "distribution": "internal"
     },
     "production": {
+      "android": {
+        "resourceClass": "default"
+      },
       "autoIncrement": true
     }
   },
