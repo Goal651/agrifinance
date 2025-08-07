@@ -6,6 +6,7 @@ import '../global.css';
 import { AuthProvider } from '../contexts/AuthContext';
 import { ProjectProvider } from '@/contexts/ProjectContext';
 import { LoanProvider } from '@/contexts/LoanContext';
+import { AdminProvider } from '@/contexts/AdminContext';
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -19,11 +20,10 @@ export default function RootLayout() {
 
   return (
     <AuthProvider >
+      <AdminProvider>
       <LoanProvider>
         <ProjectProvider>
-
           <Stack screenOptions={{ headerShown: false }}>
-
             <Stack.Screen
               name="(tabs)"
               options={{
@@ -123,9 +123,10 @@ export default function RootLayout() {
             />
             <Stack.Screen name="+not-found" />
           </Stack>
-          <StatusBar style="auto" />
+          <StatusBar style="dark"/>
         </ProjectProvider>
       </LoanProvider>
+      </AdminProvider>
     </AuthProvider>
   );
 }

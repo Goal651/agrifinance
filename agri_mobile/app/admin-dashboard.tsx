@@ -1,4 +1,4 @@
-import { useAdmin } from '@/hooks/useAdmin';
+import { useAdmin } from '@/contexts/AdminContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
@@ -7,7 +7,7 @@ import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 
 export default function AdminDashboard() {
-    const router = useRouter()
+    const router = useRouter() 
     const { summary, loanStats, users, loans, projects } = useAdmin()
     const totalStatus = loanStats.status.reduce((a, b) => a + b.value, 0);
     return (

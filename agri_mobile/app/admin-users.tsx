@@ -1,229 +1,101 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
-import { Modal, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import UserTable from './components/UserTable';
-import { useAdmin } from '@/hooks/useAdmin';
+import { useAdmin } from '@/contexts/AdminContext';
 import { User } from '@/types';
-
+import { MaterialIcons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import { useEffect, useState } from 'react';
+import { FlatList, Modal, Pressable, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function AdminUsers() {
-    const { users } = useAdmin()
+    const { users } = useAdmin();
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState('all');
-    const [page, setPage] = useState(1);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [modalUser, setModalUser] = useState<User | null>(null);
-    const [modalMode, setModalMode] = useState<'view' | 'edit' | null>(null);
-    const [deleteUser, setDeleteUser] = useState<User | null>(null);
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [addName, setAddName] = useState('');
-    const [addEmail, setAddEmail] = useState('');
-    const [addPhone, setAddPhone] = useState('');
-    const [addAddress, setAddAddress] = useState('');
-    const [addFarmType, setAddFarmType] = useState('');
-    const [addError, setAddError] = useState('');
 
-    useEffect(() => {
-        setPage(1);
-    }, [search, filter]);
+    useEffect(() => { }, [search, filter]);
 
     const filteredUsers = users.filter(u => {
         const matchesSearch =
             u.firstName.toLowerCase().includes(search.toLowerCase()) ||
             u.lastName.toLowerCase().includes(search.toLowerCase()) ||
-            u.email.toLowerCase().includes(search.toLowerCase())
-
+            u.email.toLowerCase().includes(search.toLowerCase());
         const matchesStatus =
             filter === 'all' ? true :
-                filter === 'active' ? u.status === 'Active' :
-                    filter === 'inactive' ? u.status === 'Inactive' : true;
+                filter === 'active' ? u.status === 'ACTIVE' :
+                    filter === 'inactive' ? u.status === 'INACTIVE' : true;
         return matchesSearch && matchesStatus;
     });
 
-    // Modal actions
-    const handleView = (user: User) => {
-        setModalUser(user);
-        setModalMode('view');
-    };
-    const handleEdit = (user: User) => {
-        setModalUser(user);
-        setModalMode('edit');
-    };
-    const handleDelete = (user: User) => {
-        setDeleteUser(user);
-    };
-    const handleDeleteConfirm = () => {
-        if (deleteUser) {
-            // setUsers(users.filter(u => u.email !== deleteUser.email));
-            setDeleteUser(null);
-        }
-    };
-    const handleEditSave = (updated: User) => {
-        // setUsers(users.map(u => u.email === updated.email ? updated : u));
-        setModalUser(null);
-        setModalMode(null);
-    };
-    const handleActivateToggle = (user: User) => {
-        // setUsers(users.map(u => u.email === user.email ? { ...u, status: u.status === 'Active' ? 'Inactive' : 'Active' } : u));
-    };
-
-    const handleAddUser = () => {
-        if (!addName || !addEmail || !addPhone || !addFarmType) {
-            setAddError('Please fill all required fields');
-            return;
-        }
-
-        setShowAddModal(false);
-        setAddName(''); setAddEmail(''); setAddPhone(''); setAddAddress(''); setAddFarmType(''); setAddError('');
-    };
-
-    // Edit modal state
-    const [editName, setEditName] = useState('');
-    const [editPhone, setEditPhone] = useState('');
-    const [editFarmType, setEditFarmType] = useState('');
-    useEffect(() => {
-        if (modalMode === 'edit' && modalUser) {
-            setEditName(modalUser.firstName);
-
-        }
-    }, [modalMode, modalUser]);
-
     return (
-        <View className="flex-1 bg-white">
-            <View className="flex-row items-center justify-between px-4 pt-8 pb-2">
-                <Text className="text-xl font-bold">User Management</Text>
-                <View className="flex-row space-x-2">
-                    <TouchableOpacity>
-                        <MaterialIcons name="filter-list" size={24} color="#444" />
-                    </TouchableOpacity>
-                </View>
+        <View style={{ flex: 1, backgroundColor: '#f3f4f6' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 40, paddingBottom: 10 }}>
+                <Text style={{ fontSize: 26, fontWeight: 'bold', color: '#3b0764', letterSpacing: 1 }}>User Management</Text>
             </View>
-            <View className="px-4 mb-2">
-                <View className="flex-row items-center bg-purple-50 rounded-lg px-3 py-2 mb-2">
-                    <MaterialIcons name="search" size={20} color="#888" />
+            <View style={{ paddingHorizontal: 20, marginBottom: 10 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 10, shadowColor: '#a78bfa', shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}>
+                    <MaterialIcons name="search" size={20} color="#8b5cf6" />
                     <TextInput
-                        className="flex-1 ml-2 text-base"
+                        style={{ flex: 1, marginLeft: 10, fontSize: 16, color: '#3b0764' }}
                         placeholder="Search users..."
+                        placeholderTextColor="#a1a1aa"
                         value={search}
                         onChangeText={setSearch}
                     />
                 </View>
-                <View className="flex-row space-x-2 mb-2">
-                    <TouchableOpacity className={`flex-row items-center px-3 py-1 rounded-full ${filter === 'all' ? 'bg-green-100' : 'bg-gray-100'}`} onPress={() => setFilter('all')}>
-                        <MaterialIcons name="groups" size={16} color="#15803d" />
-                        <Text className="ml-1 text-xs font-semibold">Total: {users.length}</Text>
+                <View style={{ flexDirection: 'row', marginBottom: 10 }}>
+                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, backgroundColor: filter === 'all' ? 'rgba(16,185,129,0.15)' : '#f3f4f6', marginRight: 8 }} onPress={() => setFilter('all')}>
+                        <MaterialIcons name="groups" size={16} color="#10b981" />
+                        <Text style={{ marginLeft: 4, fontSize: 13, fontWeight: '600', color: '#047857' }}>Total: {users.length}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity className={`flex-row items-center px-3 py-1 rounded-full ${filter === 'active' ? 'bg-green-100' : 'bg-gray-100'}`} onPress={() => setFilter('active')}>
+                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, backgroundColor: filter === 'active' ? 'rgba(34,197,94,0.15)' : '#f3f4f6', marginRight: 8 }} onPress={() => setFilter('active')}>
                         <MaterialIcons name="check-circle" size={16} color="#22c55e" />
-                        <Text className="ml-1 text-xs font-semibold">Active: {users.filter(u => u.status === 'Active').length}</Text>
+                        <Text style={{ marginLeft: 4, fontSize: 13, fontWeight: '600', color: '#166534' }}>Active: {users.filter(u => u.status === 'ACTIVE').length}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity className={`flex-row items-center px-3 py-1 rounded-full ${filter === 'inactive' ? 'bg-red-100' : 'bg-gray-100'}`} onPress={() => setFilter('inactive')}>
+                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, backgroundColor: filter === 'inactive' ? 'rgba(239,68,68,0.15)' : '#f3f4f6' }} onPress={() => setFilter('inactive')}>
                         <MaterialIcons name="remove-circle" size={16} color="#ef4444" />
-                        <Text className="ml-1 text-xs font-semibold">Inactive: {users.filter(u => u.status === 'Inactive').length}</Text>
+                        <Text style={{ marginLeft: 4, fontSize: 13, fontWeight: '600', color: '#991b1b' }}>Inactive: {users.filter(u => u.status === 'INACTIVE').length}</Text>
                     </TouchableOpacity>
                 </View>
             </View>
-            <View className="flex-1 px-2">
-                <UserTable
-                    users={filteredUsers}
-                    onView={handleView}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    page={page}
-                    rowsPerPage={rowsPerPage}
-                    setPage={setPage}
-                    setRowsPerPage={setRowsPerPage}
-                />
-            </View>
-            <TouchableOpacity className="absolute bottom-6 right-6 bg-green-700 rounded-full px-6 py-3 flex-row items-center shadow-lg" onPress={() => setShowAddModal(true)}>
-                <MaterialIcons name="add" size={22} color="white" />
-                <Text className="text-white font-bold ml-2">Add User</Text>
-            </TouchableOpacity>
-
-            {/* Add User Modal */}
-            <Modal visible={showAddModal} transparent animationType="fade">
-                <View className="flex-1 justify-center items-center bg-black/40">
-                    <View className="bg-white rounded-2xl p-6 w-11/12 max-w-md items-center">
-                        <Text className="text-lg font-bold mb-4 text-center">Add New User</Text>
-                        <TextInput className="border rounded-md px-3 py-2 mb-3 w-full" placeholder="Name" value={addName} onChangeText={setAddName} />
-                        <TextInput className="border rounded-md px-3 py-2 mb-3 w-full" placeholder="Email" value={addEmail} onChangeText={setAddEmail} keyboardType="email-address" autoCapitalize="none" />
-                        <TextInput className="border rounded-md px-3 py-2 mb-3 w-full" placeholder="Phone Number" value={addPhone} onChangeText={setAddPhone} keyboardType="phone-pad" />
-                        <TextInput className="border rounded-md px-3 py-2 mb-3 w-full" placeholder="Address" value={addAddress} onChangeText={setAddAddress} />
-                        <TextInput className="border rounded-md px-3 py-2 mb-3 w-full" placeholder="Farm Type" value={addFarmType} onChangeText={setAddFarmType} />
-                        {addError ? <Text className="text-red-500 text-xs mb-2 text-center">{addError}</Text> : null}
-                        <View className="flex-row justify-between mt-2 w-full">
-                            <TouchableOpacity className="flex-1 py-3 mr-2 rounded-full" onPress={() => { setShowAddModal(false); setAddError(''); }}>
-                                <Text className="text-green-700 text-center font-semibold text-base">Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity className="flex-1 py-3 ml-2 rounded-full" onPress={handleAddUser}>
-                                <Text className="text-green-700 text-center font-semibold text-base">Create User</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
-
-            {/* View/Edit Modal */}
+            <FlatList
+                data={filteredUsers}
+                keyExtractor={item => item.email}
+                contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+                renderItem={({ item }) => (
+                    <Pressable onPress={() => setModalUser(item)} style={{ marginBottom: 18 }}>
+                        <BlurView intensity={70} tint="light" style={{
+                            borderRadius: 24,
+                            padding: 22,
+                            backgroundColor: 'rgba(255,255,255,0.35)',
+                            borderWidth: 1,
+                            borderColor: 'rgba(168,139,250,0.18)',
+                            shadowColor: '#a78bfa',
+                            shadowOpacity: 0.18,
+                            shadowRadius: 16,
+                            shadowOffset: { width: 0, height: 6 },
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                        }}>
+                            <MaterialIcons name="person" size={28} color="#7c3aed" style={{ marginRight: 16 }} />
+                            <View>
+                                <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#3b0764', letterSpacing: 0.5 }}>{item.firstName} {item.lastName}</Text>
+                            </View>
+                        </BlurView>
+                    </Pressable>
+                )}
+            />
+            {/* User Details Modal */}
             <Modal visible={!!modalUser} transparent animationType="fade">
-                <View className="flex-1 justify-center items-center bg-black/40">
-                    <View className="bg-white rounded-xl p-6 w-11/12 max-w-md items-center">
-                        <Text className="text-lg font-bold mb-2 text-center">{modalMode === 'edit' ? 'Edit User' : 'User Details'}</Text>
-                        <Text className="text-xs text-gray-500 mb-2 text-center">Email: {modalUser?.email}</Text>
-                        <Text className="text-xs text-gray-500 mb-2 text-center">Status: {modalUser?.status}</Text>
-                        {modalMode === 'edit' ? (
-                            <>
-                                <Text className="font-semibold mb-1">Name</Text>
-                                <TextInput className="border rounded-md px-3 py-2 mb-2 w-full" value={editName} onChangeText={setEditName} />
-                                <Text className="font-semibold mb-1">Phone</Text>
-                                <TextInput className="border rounded-md px-3 py-2 mb-2 w-full" value={editPhone} onChangeText={setEditPhone} />
-                                <Text className="font-semibold mb-1">Farm Type</Text>
-                                <TextInput className="border rounded-md px-3 py-2 mb-2 w-full" value={editFarmType} onChangeText={setEditFarmType} />
-                                <View className="flex-row justify-between mt-4 w-full">
-                                    <TouchableOpacity className="flex-1 bg-gray-200 rounded-full py-3 mr-2" onPress={() => { setModalUser(null); setModalMode(null); }}>
-                                        <Text className="text-gray-700 text-center font-semibold text-base">Cancel</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity className="flex-1 bg-green-700 rounded-full py-3 ml-2" onPress={() => handleEditSave({ ...modalUser!, firstName: editName })}>
-                                        <Text className="text-white text-center font-semibold text-base">Save</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </>
-                        ) : (
-                            <>
-                                <Text className="font-semibold mb-1">First Name</Text>
-                                <Text className="mb-2 text-center">{modalUser?.firstName}</Text>
-                                <Text className="font-semibold mb-1">Last Name</Text>
-                                <Text className="mb-2 text-center">{modalUser?.lastName}</Text>
-                                <View className="flex-row justify-between mt-4 w-full">
-                                    <TouchableOpacity className="flex-1 bg-gray-200 rounded-full py-3 mr-2" onPress={() => setModalUser(null)}>
-                                        <Text className="text-gray-700 text-center font-semibold text-base">Close</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity className="flex-1 bg-blue-700 rounded-full py-3 ml-2" onPress={() => { setModalMode('edit'); }}>
-                                        <Text className="text-white text-center font-semibold text-base">Edit</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity className="flex-1 bg-yellow-500 rounded-full py-3 ml-2" onPress={() => { handleActivateToggle(modalUser!); setModalUser(null); }}>
-                                        <Text className="text-white text-center font-semibold text-base">{modalUser?.status === 'Active' ? 'Deactivate' : 'Activate'}</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </>
-                        )}
-                    </View>
-                </View>
-            </Modal>
-            {/* Delete Modal */}
-            <Modal visible={!!deleteUser} transparent animationType="fade">
-                <View className="flex-1 justify-center items-center bg-black/40">
-                    <View className="bg-white rounded-xl p-6 w-11/12 max-w-md items-center">
-                        <Text className="text-lg font-bold mb-2 text-red-700 text-center">Delete User</Text>
-                        <Text className="mb-4 text-center">Are you sure you want to delete <Text className="font-bold">{deleteUser?.firstName} {deleteUser?.lastName}</Text>?</Text>
-                        <View className="flex-row justify-between mt-4 w-full">
-                            <TouchableOpacity className="flex-1 bg-gray-200 rounded-full py-3 mr-2" onPress={() => setDeleteUser(null)}>
-                                <Text className="text-gray-700 text-center font-semibold text-base">Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity className="flex-1 bg-red-700 rounded-full py-3 ml-2" onPress={handleDeleteConfirm}>
-                                <Text className="text-white text-center font-semibold text-base">Delete</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(24,24,27,0.35)' }}>
+                    <BlurView intensity={90} tint="light" style={{ borderRadius: 32, padding: 28, width: '90%', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.45)', borderWidth: 1, borderColor: 'rgba(168,139,250,0.18)' }}>
+                        <Text style={{ fontSize: 22, fontWeight: 'bold', color: '#3b0764', marginBottom: 8 }}>User Details</Text>
+                        <Text style={{ fontSize: 16, color: '#6d28d9', marginBottom: 2 }}><Text style={{ fontWeight: 'bold' }}>First Name:</Text> {modalUser?.firstName}</Text>
+                        <Text style={{ fontSize: 16, color: '#6d28d9', marginBottom: 2 }}><Text style={{ fontWeight: 'bold' }}>Last Name:</Text> {modalUser?.lastName}</Text>
+                        <Text style={{ fontSize: 16, color: '#6d28d9', marginBottom: 2 }}><Text style={{ fontWeight: 'bold' }}>Email:</Text> {modalUser?.email}</Text>
+                        <Text style={{ fontSize: 16, color: '#6d28d9', marginBottom: 2 }}><Text style={{ fontWeight: 'bold' }}>Status:</Text> {modalUser?.status}</Text>
+                        <TouchableOpacity style={{ marginTop: 24, backgroundColor: '#7c3aed', borderRadius: 999, paddingHorizontal: 32, paddingVertical: 12, shadowColor: '#a78bfa', shadowOpacity: 0.18, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } }} onPress={() => setModalUser(null)}>
+                            <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>Close</Text>
+                        </TouchableOpacity>
+                    </BlurView>
                 </View>
             </Modal>
         </View>

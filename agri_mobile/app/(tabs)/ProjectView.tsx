@@ -172,8 +172,6 @@ export default function ProjectView() {
     const { currentProject,setCurrentGoal} = useProject();
     const { createGoal } = useProjectAction()
     const [isCreateGoalModalVisible, setIsCreateGoalModalVisible] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
 
     const handleCreateGoal = async (goalData: GoalCreateRequest) => {
         await createGoal(goalData)
@@ -186,26 +184,7 @@ export default function ProjectView() {
         });
     };
 
-    if (loading) {
-        return (
-            <View className="flex-1 justify-center items-center bg-white">
-                <ActivityIndicator size="large" color="#3b82f6" />
-            </View>
-        );
-    }
 
-    if (error) {
-        return (
-            <View className="flex-1 justify-center items-center p-4 bg-white">
-                <Text className="text-red-500 text-lg mb-4 text-center">{error}</Text>
-                <TouchableOpacity
-                    className="bg-blue-500 px-6 py-2 rounded-lg"
-                >
-                    <Text className="text-white font-semibold">Retry</Text>
-                </TouchableOpacity>
-            </View>
-        );
-    }
 
     if (!currentProject) {
         return (
@@ -218,13 +197,6 @@ export default function ProjectView() {
             </View>
         );
     }
-
-    const getProgressPercentage = (tasks: Task []) => {
-        if (!tasks || tasks.length === 0) return 0;
-        const completed = tasks.filter(t => t.status === 'COMPLETED').length;
-        return Math.round((completed / tasks.length) * 100);
-    };
-
     return (
         <View className="flex-1 bg-white">
             <Stack.Screen

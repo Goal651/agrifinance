@@ -1,6 +1,6 @@
 // API Configuration Constants
 
-const SERVER_URL = 'http://192.168.254.223:8089'
+const SERVER_URL = 'http://192.168.244.223:8089'
 
 export const API_CONFIG = {
   BASE_URL: SERVER_URL,
@@ -31,7 +31,7 @@ export const API_ENDPOINTS = {
     GOAL: {
       CREATE: '/projects/goal',
     },
-    TASK: { 
+    TASK: {
       CREATE: '/projects/task',
       DONE: (id: string) => `/projects/task/done/${id}`
     }
@@ -57,10 +57,10 @@ export const API_ENDPOINTS = {
       APPROVE: (id: string) => `/admin/loans/approve/${id}`,
       REJECT: (id: string) => `/admin/loans/reject/${id}`,
       STATS: '/admin/loans/stats',
-      APPROVED:`/admin/loans/approved`,
+      APPROVED: `/admin/loans/approved`,
       UNAPPROVED: '/admin/loans/unapproved',
       UPDATE_STATUS: (id: string) => `/admin/loans/update-status/${id}`,
-      BY_ID:(id:string)=>`/admin/loans/${id}`
+      BY_ID: (id: string) => `/admin/loans/${id}`
     },
 
     // Loan Product Management

@@ -29,7 +29,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     // Load auth state from storage
     useEffect(() => {
         const loadAuthState = async () => {
-            try {
+            try {                    
                 const [token, userRole] = await Promise.all([
                     AsyncStorage.getItem('auth_token'),
                     AsyncStorage.getItem('role')
@@ -42,7 +42,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 // Only navigate if we have a token
                 if (token) {
-                    router.replace('/(tabs)');
+                    router.replace(userRole === 'ADMIN' ? '/admin-dashboard' : '/(tabs)');
                 } else {
                     router.replace('/login');
                 }
@@ -73,9 +73,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
                         // Wait for token to be stored before navigating
                         await new Promise(resolve => setTimeout(resolve, 100));
                         if (response.data.role === 'ADMIN') {
-                            // router.push('/admin/admin-dashboard');
+                            router.push('/admin-dashboard');
                         } else {
-                            router.push('/(tabs)/loans/LoanService');
+                            router.push('/(tabs)');
                         }
                     })
                     .catch(error => {
