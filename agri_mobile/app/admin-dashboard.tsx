@@ -3,9 +3,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
-
-
-
 export default function AdminDashboard() {
     const router = useRouter() 
     const { summary, loanStats, users, loans, projects } = useAdmin()
