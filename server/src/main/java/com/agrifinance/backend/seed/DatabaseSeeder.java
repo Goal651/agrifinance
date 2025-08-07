@@ -30,7 +30,7 @@ public class DatabaseSeeder {
         public CommandLineRunner seedData() {
                 return args -> {
                         // First, create users if they don't exist
-                        User admin = userRepository.findByEmail("admin@agrifinance.com")
+                        userRepository.findByEmail("admin@agrifinance.com")
                                         .orElseGet(() -> {
                                                 User newAdmin = User.builder()
                                                                 .email("admin@agrifinance.com")
@@ -43,7 +43,7 @@ public class DatabaseSeeder {
                                                 return userRepository.save(newAdmin);
                                         });
 
-                        User user = userRepository.findByEmail("user@agrifinance.com")
+                        userRepository.findByEmail("user@agrifinance.com")
                                         .orElseGet(() -> {
                                                 User newUser = User.builder()
                                                                 .email("user@agrifinance.com")
@@ -55,171 +55,6 @@ public class DatabaseSeeder {
                                                                 .build();
                                                 return userRepository.save(newUser);
                                         });
-
-                        // Get fresh instances to avoid any potential proxy issues
-                        admin = userRepository.findById(admin.getId()).orElseThrow();
-                        user = userRepository.findById(user.getId()).orElseThrow();
-                        List<User> allUsers = List.of(admin, user);
-
-                        if (loanProductRepository.count() == 0) {
-                                LoanProduct lp1 = LoanProduct.builder()
-                                                .name("Standard Crop Loan")
-                                                .description("Loan for crop farmers")
-                                                .interest(8.5)
-                                                .amount(10000.0)
-                                                .term(12)
-                                                .termType(LoanTermType.MONTHS)
-                                                .build();
-                                LoanProduct lp2 = LoanProduct.builder()
-                                                .name("Livestock Loan")
-                                                .description("Loan for livestock farmers")
-                                                .interest(10.0)
-                                                .amount(20000.0)
-                                                .term(24)
-                                                .termType(LoanTermType.YEARS)
-                                                .build();
-                                loanProductRepository.saveAll(List.of(lp1, lp2));
-                        }
-
-                        List<LoanProduct> products = loanProductRepository.findAll();
-                        LoanProduct cropLoan = products.stream()
-                                        .filter(lp -> lp.getName().equals("Standard Crop Loan"))
-                                        .findFirst()
-                                        .orElseThrow(() -> new RuntimeException("Crop loan product not found"));
-                        LoanProduct cattleLoan = products.stream()
-                                        .filter(lp -> lp.getName().equals("Livestock Loan"))
-                                        .findFirst()
-                                        .orElseThrow(() -> new RuntimeException("Livestock loan product not found"));
-
-                        if (loanRepository.count() == 0 && !allUsers.isEmpty() && !products.isEmpty()) {
-                                User farmer = allUsers.stream()
-                                                .filter(u -> u.getRole().equals(Role.USER))
-                                                .findFirst()
-                                                .orElseThrow(() -> new RuntimeException("Farmer user not found"));
-
-                                // Create loan 1
-                                Loan loan1 = Loan.builder()
-                                                .user(farmer)
-                                                .status(LoanStatus.PENDING)
-                                                .details(cropLoan)
-                                                .info(LoanInfo.builder()
-                                                                .personal(PersonalInfo.builder()
-                                                                                .firstName(farmer.getFirstName())
-                                                                                .lastName(farmer.getLastName())
-                                                                                .idNumber("ID12345678")
-                                                                                .dateOfBirth(java.time.LocalDate.now()
-                                                                                                .minusYears(35))
-
-                                                                                .build())
-                                                                .financial(FinancialInfo.builder()
-                                                                                .monthlyIncome(1500.0)
-                                                                                .incomeSource("farming")
-                                                                                .employmentStatus("self-employed")
-                                                                                .farmingExperience(8)
-                                                                                .farmType("crop")
-                                                                                .bankName("Equity Bank")
-                                                                                .bankBranch("Nairobi CBD")
-                                                                                .accountNumber("1234567890")
-                                                                                .accountHolderName(farmer.getFirstName()
-                                                                                                + " "
-                                                                                                + farmer.getLastName())
-                                                                                .build())
-                                                                .documents(DocumentUpload.builder()
-                                                                                .idPhoto("id_photo_1.jpg")
-                                                                                .proofOfIncome("income_proof_1.pdf")
-                                                                                .farmOwnershipDocuments(
-                                                                                                "title_deed_1.pdf")
-                                                                                .cooperativeMembership(
-                                                                                                "coop_cert_1.pdf")
-                                                                                .treeImages(List.of("farm1.jpg",
-                                                                                                "farm2.jpg"))
-                                                                                .build())
-                                                                .build())
-                                                .paidAmount(0.0)
-                                                .createdAt(java.time.LocalDateTime.now().minusMonths(6))
-                                                .updatedAt(java.time.LocalDateTime.now().minusMonths(1))
-                                                .build();
-
-                                // Create loan 2
-                                Loan loan2 = Loan.builder()
-                                                .user(farmer)
-                                                .status(LoanStatus.PENDING)
-                                                .details(cattleLoan)
-                                                .info(LoanInfo.builder()
-                                                                .personal(PersonalInfo.builder()
-                                                                                .firstName(farmer.getFirstName())
-                                                                                .lastName(farmer.getLastName())
-                                                                                .idNumber("ID12345678")
-                                                                                .dateOfBirth(java.time.LocalDate.now()
-                                                                                                .minusYears(35))
-                                                                                .streetAddress("8765432")
-                                                                                .city("Nairobi")
-                                                                                .state("Nairobi")
-                                                                                .postalCode("00100")
-                                                                                .country("Kenya")
-                                                                                .build())
-                                                                .financial(FinancialInfo.builder()
-                                                                                .monthlyIncome(2000.0)
-                                                                                .incomeSource("farming")
-                                                                                .employmentStatus("self-employed")
-                                                                                .farmingExperience(10)
-                                                                                .farmType("livestock")
-                                                                                .bankName("KCB Bank")
-                                                                                .bankBranch("Nairobi West")
-                                                                                .accountNumber("0987654321")
-                                                                                .accountHolderName(farmer.getFirstName()
-                                                                                                + " "
-                                                                                                + farmer.getLastName())
-                                                                                .build())
-                                                                .documents(DocumentUpload.builder()
-                                                                                .idPhoto("id_photo_2.jpg")
-                                                                                .proofOfIncome("income_proof_2.pdf")
-                                                                                .farmOwnershipDocuments(
-                                                                                                "title_deed_2.pdf")
-                                                                                .cooperativeMembership(
-                                                                                                "coop_cert_2.pdf")
-                                                                                .treeImages(List.of("cattle1.jpg",
-                                                                                                "cattle2.jpg"))
-                                                                                .build())
-                                                                .build())
-                                                .paidAmount(0.0)
-                                                .createdAt(java.time.LocalDateTime.now().minusMonths(2))
-                                                .updatedAt(java.time.LocalDateTime.now())
-                                                .build();
-
-                                loanRepository.saveAll(List.of(loan1, loan2));
-                        }
-
-                        if (projectRepository.count() == 0 && !allUsers.isEmpty()) {
-                                User farmer = allUsers.stream()
-                                .filter(u -> u.getRole().equals(Role.USER))
-                                .findFirst()
-                                .orElseThrow(() -> new RuntimeException("Farmer user not found"));
-
-                                // Admin creates the first project
-                                Project project1 = Project.builder()
-                                                .user(farmer)  
-                                                .name("Maize Expansion")
-                                                .description("Expanding maize farm by 5 acres.")
-                                                .status(ProjectStatus.NOT_STARTED)
-                                                .targetDate(java.time.LocalDateTime.now().plusMonths(6))
-                                                .completedAt(null)
-                                                .createdAt(java.time.LocalDateTime.now().minusMonths(4))
-                                                .updatedAt(java.time.LocalDateTime.now().minusMonths(1))
-                                                .build();
-                                // Regular user creates the second project
-                                Project project2 = Project.builder()
-                                                .user(farmer)
-                                                .name("Dairy Upgrade")
-                                                .description("Upgrade dairy facilities for higher yield.")
-                                                .status(ProjectStatus.COMPLETED)
-                                                .targetDate(null)
-                                                .completedAt(java.time.LocalDateTime.now().minusMonths(1))
-                                                .createdAt(java.time.LocalDateTime.now().minusMonths(1))
-                                                .updatedAt(java.time.LocalDateTime.now())
-                                                .build();
-                                projectRepository.saveAll(List.of(project1, project2));
-                        }
                 };
-        }
+        };
 }
