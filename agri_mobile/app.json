@@ -19,7 +19,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.anonymous.agri_mobile"
-    },
+    }, 
     "web": {
       "bundler": "metro",
       "output": "static",
